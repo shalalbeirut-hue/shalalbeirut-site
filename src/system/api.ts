@@ -296,9 +296,30 @@ api.get('/orders', requireStaff(), async (c) => {
   }
   const q = str(c.req.query('q'), 60);
   if (q) { args.push(`%${q}%`); const n = args.length; where.push(`(o.code LIKE ?${n} OR c.name LIKE ?${n} OR c.phone LIKE ?${n})`); }
-  const sql = `${ORDER_LIST_SQL} ${where.length ? 'WHERE ' + where.join(' AND ') : ''}
-    ORDER BY CASE o.status WHEN 'new' THEN 0 WHEN 'reopened' THEN 1 WHEN 'in_progress' THEN 2 WHEN 'on_the_way' THEN 3 WHEN 'assigned' THEN 4 ELSE 5 END,
-    COALESCE(o.scheduled_at, o.created_at) ${user.role === 'tech' ? 'ASC' : 'DESC'} LIMIT 200`;
+  const gov = str(c.req.query('gov'), 40);
+  if (gov) add('a.governorate = ?', gov);
+  const area = str(c.req.query('area'), 60);
+  if (area) add('a.area = ?', area);
+  if (c.req.query('service')) add('EXISTS (SELECT 1 FROM order_services osf WHERE osf.order_id = o.id AND osf.service_id = ?)', int(c.req.query('service')));
+  if (c.req.query('unassigned')) where.push('o.tech_id IS NULL');
+  // Date range on the visit date or the registration date. from/to are Kuwait calendar days (YYYY-MM-DD).
+  const dateCol = c.req.query('date_by') === 'created' ? 'o.created_at' : 'o.scheduled_at';
+  const day = (v: string | undefined, end = false) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T${end ? '24:00' : '00:00'}:00+03:00`).toISOString() : null);
+  const from = day(c.req.query('from'));
+  const to = day(c.req.query('to'), true);
+  if (from) add(`${dateCol} >= ?`, from);
+  if (to) add(`${dateCol} < ?`, to);
+  // Sorting: visit or registration date, either direction. Default keeps urgent states first.
+  const SORTS: Record<string, string> = {
+    visit_asc: 'o.scheduled_at IS NULL, o.scheduled_at ASC',
+    visit_desc: 'o.scheduled_at IS NULL, o.scheduled_at DESC',
+    created_desc: 'o.created_at DESC',
+    created_asc: 'o.created_at ASC',
+  };
+  const sort = SORTS[c.req.query('sort') ?? ''];
+  const order = sort ?? `CASE o.status WHEN 'new' THEN 0 WHEN 'reopened' THEN 1 WHEN 'in_progress' THEN 2 WHEN 'on_the_way' THEN 3 WHEN 'assigned' THEN 4 ELSE 5 END,
+    COALESCE(o.scheduled_at, o.created_at) ${user.role === 'tech' ? 'ASC' : 'DESC'}`;
+  const sql = `${ORDER_LIST_SQL} ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY ${order} LIMIT 300`;
   const rows = await c.env.DB.prepare(sql).bind(...args).all();
   return c.json({ orders: rows.results });
 });

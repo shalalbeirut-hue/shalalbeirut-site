@@ -1,39 +1,153 @@
 import { useState, useEffect } from 'preact/hooks';
 import { api, fmtDateTime, fmtTime, phoneDisplay, SOURCE, GOVERNORATES, kuwaitLocalToIso } from '../lib';
-import { useLoad, Loading, ErrorBox, StatusBadge, Icon, Field, Btn, useAction, ServiceChips } from '../ui';
+import { useLoad, Loading, ErrorBox, StatusBadge, Icon, Field, Btn, useAction, ServiceChips, AreaPicker } from '../ui';
 import { useApp } from './App';
 
 const TABS: [string, string][] = [['open', 'المفتوحة'], ['new', 'جديدة'], ['reopened', 'أعيد فتحها'], ['done', 'تنتظر المتابعة'], ['closed', 'مغلقة'], ['', 'الكل']];
 
-export function Orders({ techHome }: { techHome?: boolean }) {
+const kwDay = (offsetDays = 0) => new Date(Date.now() + 3 * 3600_000 + offsetDays * 86400_000).toISOString().slice(0, 10);
+const FILTERS_KEY = 'sb-order-filters';
+type Filters = { status: string; q: string; gov: string; area: string; tech: string; service: string; date_by: string; from: string; to: string; sort: string };
+const EMPTY: Filters = { status: 'open', q: '', gov: '', area: '', tech: '', service: '', date_by: 'visit', from: '', to: '', sort: '' };
+const loadFilters = (): Filters => {
+  try { return { ...EMPTY, ...JSON.parse(localStorage.getItem(FILTERS_KEY) || '{}') }; } catch { return EMPTY; }
+};
+
+export function Orders(_: { techHome?: boolean }) {
   const { user } = useApp();
-  const [tab, setTab] = useState(techHome ? 'open' : 'open');
-  const [q, setQ] = useState('');
-  const [query, setQuery] = useState('');
-  const { data, error, loading, reload } = useLoad(() => api(`/orders?status=${tab}&q=${encodeURIComponent(query)}`), [tab, query]);
-  const tech = user.role === 'tech';
+  return user.role === 'tech' ? <TechVisits /> : <OfficeOrders />;
+}
+
+/** Office view: filters, sorting and a table with visit and registration dates. */
+function OfficeOrders() {
+  const { go } = useApp();
+  const [f, setF] = useState<Filters>(loadFilters);
+  const [q, setQ] = useState(f.q);
+  const [showFilters, setShowFilters] = useState(!!(f.gov || f.tech || f.service || f.from || f.to));
+  const techs = useLoad(() => api('/users?role=tech'));
+  const services = useLoad(() => api('/services'));
+  const qs = new URLSearchParams(Object.entries(f).filter(([, v]) => v !== '') as [string, string][]).toString();
+  const { data, error, loading, reload } = useLoad(() => api(`/orders?${qs}`), [qs]);
+  const set = (patch: Partial<Filters>) => {
+    const next = { ...f, ...patch };
+    setF(next);
+    try { localStorage.setItem(FILTERS_KEY, JSON.stringify(next)); } catch { /* private mode */ }
+  };
+  const sortBy = (col: 'visit' | 'created') => {
+    const cur = f.sort;
+    set({ sort: col === 'visit' ? (cur === 'visit_asc' ? 'visit_desc' : 'visit_asc') : (cur === 'created_desc' ? 'created_asc' : 'created_desc') });
+  };
+  const arrow = (col: 'visit' | 'created') => (f.sort === col + '_asc' ? ' ↑' : f.sort === col + '_desc' ? ' ↓' : '');
+  const active = [f.gov, f.area, f.tech, f.service, f.from, f.to].filter(Boolean).length;
+  const preset = (by: string, d: string) => f.date_by === by && f.from === d && f.to === d;
+
   return (
     <div>
       <div class="page-head">
-        <h1>{tech ? 'زياراتي' : 'الطلبات'}</h1>
+        <h1>الطلبات {data && <span class="muted small">({data.orders.length})</span>}</h1>
         <div class="row">
-          <Btn icon="refresh" variant="ghost" onClick={reload} aria-label="تحديث">تحديث</Btn>
-          {!tech && <a class="btn primary" href="/app/orders/new/"><Icon name="plus" />طلب جديد</a>}
+          <Btn icon="refresh" variant="ghost" onClick={reload}>تحديث</Btn>
+          <a class="btn primary" href="/app/orders/new/"><Icon name="plus" />طلب جديد</a>
         </div>
       </div>
-      {!tech && (
-        <form class="row" style="margin-bottom:12px" onSubmit={(e) => { e.preventDefault(); setQuery(q); }}>
-          <input id="orders-q" class="input grow" placeholder="ابحث برقم الطلب أو اسم العميل أو رقمه" value={q} onInput={(e) => setQ(e.currentTarget.value)} />
-          <button class="btn" type="submit"><Icon name="search" />بحث</button>
-        </form>
-      )}
+
+      <form class="row" style="margin-bottom:10px" onSubmit={(e) => { e.preventDefault(); set({ q }); }}>
+        <input id="orders-q" class="input grow" placeholder="ابحث برقم الطلب أو اسم العميل أو رقمه" value={q} onInput={(e) => setQ(e.currentTarget.value)} />
+        <button class="btn" type="submit"><Icon name="search" />بحث</button>
+        <button type="button" class={`btn ${active ? 'water' : ''}`} onClick={() => setShowFilters(!showFilters)}>فلترة{active ? ` (${active})` : ''}</button>
+      </form>
+
       <div class="tabs" role="tablist">
-        {(tech ? [['open', 'الحالية'], ['done', 'خلصت'], ['closed', 'مغلقة']] as [string, string][] : TABS).map(([k, l]) => (
+        {TABS.map(([k, l]) => <button role="tab" aria-selected={f.status === k} class={f.status === k ? 'on' : ''} onClick={() => set({ status: k })}>{l}</button>)}
+      </div>
+
+      <div class="tabs">
+        <button class={preset('visit', kwDay()) ? 'on' : ''} onClick={() => set({ date_by: 'visit', from: kwDay(), to: kwDay(), sort: 'visit_asc' })}>زيارات اليوم</button>
+        <button class={preset('visit', kwDay(1)) ? 'on' : ''} onClick={() => set({ date_by: 'visit', from: kwDay(1), to: kwDay(1), sort: 'visit_asc' })}>زيارات بكرة</button>
+        <button class={preset('created', kwDay()) ? 'on' : ''} onClick={() => set({ date_by: 'created', from: kwDay(), to: kwDay(), sort: 'created_desc' })}>انسجلت اليوم</button>
+        {(active > 0 || f.sort) && <button onClick={() => set({ ...EMPTY, status: f.status, q: f.q })}>امسح الفلاتر ✕</button>}
+      </div>
+
+      {showFilters && (
+        <div class="card" style="margin-bottom:12px">
+          <div class="grid2">
+            <AreaPicker idPrefix="of" gov={f.gov} area={f.area} allowAny onChange={(gov, area) => set({ gov, area })} />
+            <Field label="الفني">
+              <select id="of-tech" class="input" value={f.tech} onChange={(e) => set({ tech: e.currentTarget.value })}>
+                <option value="">كل الفنيين</option>
+                {techs.data?.users.map((u: any) => <option value={u.id}>{u.name}</option>)}
+              </select>
+            </Field>
+            <Field label="الخدمة">
+              <select id="of-svc" class="input" value={f.service} onChange={(e) => set({ service: e.currentTarget.value })}>
+                <option value="">كل الخدمات</option>
+                {services.data?.services.map((s: any) => <option value={s.id}>{s.name_ar}</option>)}
+              </select>
+            </Field>
+            <Field label="التاريخ حسب">
+              <select id="of-dateby" class="input" value={f.date_by} onChange={(e) => set({ date_by: e.currentTarget.value })}>
+                <option value="visit">تاريخ الزيارة</option>
+                <option value="created">تاريخ التسجيل (الاتصال)</option>
+              </select>
+            </Field>
+            <Field label="من"><input id="of-from" class="input" type="date" value={f.from} onInput={(e) => set({ from: e.currentTarget.value })} /></Field>
+            <Field label="إلى"><input id="of-to" class="input" type="date" value={f.to} onInput={(e) => set({ to: e.currentTarget.value })} /></Field>
+            <Field label="الترتيب">
+              <select id="of-sort" class="input" value={f.sort} onChange={(e) => set({ sort: e.currentTarget.value })}>
+                <option value="">الأهم أول (الجديد والمفتوح)</option>
+                <option value="visit_asc">تاريخ الزيارة: الأقدم أول</option>
+                <option value="visit_desc">تاريخ الزيارة: الأحدث أول</option>
+                <option value="created_desc">تاريخ التسجيل: الأحدث أول</option>
+                <option value="created_asc">تاريخ التسجيل: الأقدم أول</option>
+              </select>
+            </Field>
+          </div>
+        </div>
+      )}
+
+      <ErrorBox error={error} />
+      {loading && !data ? <Loading /> : data?.orders.length === 0 ? <div class="empty">ما في طلبات بهالفلترة.</div> : (
+        <div class="table-wrap">
+          <table class="orders-table">
+            <thead><tr>
+              <th>الطلب</th><th>العميل</th><th>الخدمات</th><th>المنطقة</th><th>الفني</th>
+              <th><button class="th-sort" onClick={() => sortBy('visit')}>تاريخ الزيارة{arrow('visit')}</button></th>
+              <th><button class="th-sort" onClick={() => sortBy('created')}>تاريخ التسجيل{arrow('created')}</button></th>
+              <th>الحالة</th>
+            </tr></thead>
+            <tbody>{data?.orders.map((o: any) => (
+              <tr class="clickable" onClick={() => go(`/orders/${o.id}`)}>
+                <td><a class="num" href={`/app/orders/${o.id}/`} onClick={(e) => e.stopPropagation()}>{o.code}</a>{o.priority === 'urgent' && <span class="badge urgent" style="margin-inline-start:6px">مستعجل</span>}</td>
+                <td><b>{o.customer_name}</b><div class="small muted num">{phoneDisplay(o.customer_phone)}</div></td>
+                <td class="small">{o.service ?? '—'}</td>
+                <td class="small">{o.area ? <>{o.area}<div class="muted">{o.governorate}</div></> : '—'}</td>
+                <td class="small">{o.tech_name ?? <span class="badge t-warn">ما انسند</span>}</td>
+                <td class="small">{o.scheduled_at ? fmtDateTime(o.scheduled_at) : o.preferred_time ? <span class="muted">يفضّل: {o.preferred_time}</span> : '—'}</td>
+                <td class="small">{fmtDateTime(o.created_at)}<div class="muted">{SOURCE[o.source] ?? o.source}</div></td>
+                <td><StatusBadge status={o.status} /></td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Technician view: simple cards, nearest visit first. */
+function TechVisits() {
+  const [tab, setTab] = useState('open');
+  const { data, error, loading, reload } = useLoad(() => api(`/orders?status=${tab}&sort=${tab === 'open' ? 'visit_asc' : 'visit_desc'}`), [tab]);
+  return (
+    <div>
+      <div class="page-head"><h1>زياراتي</h1><Btn icon="refresh" variant="ghost" onClick={reload}>تحديث</Btn></div>
+      <div class="tabs" role="tablist">
+        {([['open', 'الحالية'], ['done', 'خلصت'], ['closed', 'مغلقة']] as [string, string][]).map(([k, l]) => (
           <button role="tab" aria-selected={tab === k} class={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{l}</button>
         ))}
       </div>
       <ErrorBox error={error} />
-      {loading && !data ? <Loading /> : data?.orders.length === 0 ? <div class="empty">ما في طلبات هني.</div> : (
+      {loading && !data ? <Loading /> : data?.orders.length === 0 ? <div class="empty">ما في زيارات هني.</div> : (
         <div class="list">{data?.orders.map((o: any) => (
           <a class="item" href={`/app/orders/${o.id}/`}>
             <div class="top">
@@ -41,12 +155,7 @@ export function Orders({ techHome }: { techHome?: boolean }) {
               <span class="row" style="gap:6px">{o.priority === 'urgent' && <span class="badge urgent">مستعجل</span>}<StatusBadge status={o.status} /></span>
             </div>
             <div class="small">{o.service ?? 'خدمة غير محددة'}{o.area ? ` · ${o.governorate ?? ''} - ${o.area}${o.block ? ' ق' + o.block : ''}` : ''}</div>
-            <div class="row small muted">
-              {o.scheduled_at ? <span><Icon name="truck" class="" /> الموعد: {tech ? fmtTime(o.scheduled_at) + ' · ' : ''}{fmtDateTime(o.scheduled_at)}</span> : o.preferred_time ? <span>يفضّل: {o.preferred_time}</span> : null}
-              {!tech && <span>{o.tech_name ? `الفني: ${o.tech_name}` : 'ما انسند'}</span>}
-              {!tech && <span>{SOURCE[o.source] ?? o.source}</span>}
-              {!tech && <span class="num">{phoneDisplay(o.customer_phone)}</span>}
-            </div>
+            {o.scheduled_at && <div class="small"><b>الموعد: {fmtTime(o.scheduled_at)}</b> · {fmtDateTime(o.scheduled_at)}</div>}
           </a>
         ))}</div>
       )}
@@ -123,8 +232,7 @@ export function NewOrder() {
         )}
         {addressId === 'new' && (
           <div class="grid2">
-            <Field label="المحافظة"><select id="no-gov" class="input" value={addr.governorate} onChange={setA('governorate')}>{GOVERNORATES.map((g) => <option>{g}</option>)}</select></Field>
-            <Field label="المنطقة"><input id="no-area" class="input" value={addr.area} onInput={setA('area')} required /></Field>
+            <AreaPicker idPrefix="no" gov={addr.governorate} area={addr.area} onChange={(governorate, area) => setAddr({ ...addr, governorate, area })} />
             <Field label="القطعة"><input id="no-block" class="input" value={addr.block} onInput={setA('block')} /></Field>
             <Field label="الشارع"><input id="no-street" class="input" value={addr.street} onInput={setA('street')} /></Field>
             <Field label="الجادة"><input id="no-avenue" class="input" value={addr.avenue} onInput={setA('avenue')} /></Field>

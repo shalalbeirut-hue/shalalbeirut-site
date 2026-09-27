@@ -273,3 +273,9 @@ textarea.input { min-height: 90px; resize: vertical; }
 .whoami b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .whoami span { font-size: 0.75rem; color: #9cd6f2; white-space: nowrap; }
 @media (max-width: 380px) { .whoami span { display: none; } }
+
+/* Orders table */
+.orders-table { min-width: 860px; }
+.orders-table tr.clickable { cursor: pointer; }
+.orders-table tr.clickable:hover td { background: #f7faf8; }
+.th-sort { background: none; border: 0; padding: 0; font: inherit; font-weight: 600; color: var(--slate); cursor: pointer; text-decoration: underline dotted; }

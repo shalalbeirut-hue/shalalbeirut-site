@@ -2,6 +2,7 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useState, useCallback, useRef } from 'preact/hooks';
 import { STATUS } from './lib';
+import { AREAS } from '../data/areas';
 
 const P: Record<string, string> = {
   home: 'M3 11l9-7 9 7M5 10v10h14V10M10 20v-5h4v5',
@@ -161,5 +162,45 @@ export function ServiceChips({ services, value, onChange }: { services: any[]; v
         </button>
       ))}
     </div>
+  );
+}
+
+/** Governorate → area lists, the same as the website's area pages. */
+export const AREA_MAP: Record<string, string[]> = Object.fromEntries(AREAS.map((a) => [a.ar.name, a.ar.places]));
+
+/** Governorate select, then area select from the list, with "another area" for anything not listed. */
+export function AreaPicker({ gov, area, onChange, idPrefix = 'ap', allowAny = false }: {
+  gov: string; area: string; onChange: (gov: string, area: string) => void; idPrefix?: string; allowAny?: boolean;
+}) {
+  const places = AREA_MAP[gov] ?? [];
+  const custom = !!area && !places.includes(area);
+  const [typing, setTyping] = useState(custom);
+  return (
+    <>
+      <div class="field">
+        <label for={`${idPrefix}-gov`}>المحافظة</label>
+        <select id={`${idPrefix}-gov`} class="input" value={gov} onChange={(e) => { onChange(e.currentTarget.value, ''); setTyping(false); }}>
+          {allowAny && <option value="">كل المحافظات</option>}
+          {Object.keys(AREA_MAP).map((g) => <option value={g}>{g}</option>)}
+        </select>
+      </div>
+      <div class="field">
+        <label for={`${idPrefix}-area`}>المنطقة</label>
+        {typing ? (
+          <div class="row" style="flex-wrap:nowrap">
+            <input id={`${idPrefix}-area`} class="input" placeholder="اكتب اسم المنطقة" value={area} onInput={(e) => onChange(gov, e.currentTarget.value)} />
+            <button type="button" class="btn sm ghost" onClick={() => { setTyping(false); onChange(gov, ''); }}>القائمة</button>
+          </div>
+        ) : (
+          <select id={`${idPrefix}-area`} class="input" value={area} disabled={!gov} onChange={(e) => {
+            if (e.currentTarget.value === '__other') { setTyping(true); onChange(gov, ''); } else onChange(gov, e.currentTarget.value);
+          }}>
+            <option value="">{allowAny ? 'كل المناطق' : 'اختار المنطقة'}</option>
+            {places.map((p) => <option value={p}>{p}</option>)}
+            {!allowAny && <option value="__other">منطقة ثانية…</option>}
+          </select>
+        )}
+      </div>
+    </>
   );
 }

@@ -1,7 +1,7 @@
 // Customer service and office pages: follow-ups, surveys, invoices, customers.
 import { useState } from 'preact/hooks';
 import { api, fmtDateTime, fmtDate, kd, phoneDisplay, telHref, waHref, PAY, openWa, GOVERNORATES } from '../lib';
-import { useLoad, Loading, ErrorBox, StatusBadge, Stars, Icon, Field, Btn, Modal, useAction } from '../ui';
+import { useLoad, Loading, ErrorBox, StatusBadge, Stars, Icon, Field, Btn, Modal, useAction, AreaPicker } from '../ui';
 import { useApp } from './App';
 import { DOC } from './Docs';
 
@@ -168,10 +168,7 @@ function NewCustomerModal({ onClose, onDone }: any) {
       <ErrorBox error={error} />
       <Field label="الاسم"><input id="nc-name" class="input" value={f.name} onInput={set('name')} /></Field>
       <Field label="رقم الموبايل"><input id="nc-phone" class="input" type="tel" dir="ltr" value={f.phone} onInput={set('phone')} /></Field>
-      <div class="grid2">
-        <Field label="المحافظة"><select id="nc-gov" class="input" value={f.governorate} onChange={set('governorate')}>{GOVERNORATES.map((g) => <option>{g}</option>)}</select></Field>
-        <Field label="المنطقة"><input id="nc-area" class="input" value={f.area} onInput={set('area')} /></Field>
-      </div>
+      <div class="grid2"><AreaPicker idPrefix="nc" gov={f.governorate} area={f.area} onChange={(governorate, area) => setF({ ...f, governorate, area })} /></div>
       <Field label="ملاحظات"><textarea id="nc-notes" class="input" value={f.notes} onInput={set('notes')} /></Field>
       <Btn variant="primary" busy={busy} onClick={() => run(async () => {
         const r = await api('/customers', { body: { name: f.name, phone: f.phone, notes: f.notes, address: f.area ? { governorate: f.governorate, area: f.area, block: f.block } : undefined } });

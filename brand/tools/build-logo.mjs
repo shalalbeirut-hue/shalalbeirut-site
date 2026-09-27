@@ -21,7 +21,7 @@ const MONO = (c) => ({ pipe: c, water: c, name: c, sub: c, en: c });
 
 // ---------- Fonts (static TTF instances from Google Fonts) ----------
 const FONTS = {
-  display: { family: 'Reem Kufi', weight: 700 },
+  display: { family: 'Readex Pro', weight: 700 },
   body: { family: 'IBM Plex Sans Arabic', weight: 500 },
   latin: { family: 'Readex Pro', weight: 600 },
 };
@@ -133,13 +133,13 @@ function stacked(F, c) {
   const pad = 14;
   const W = pad * 2 + Math.max(name.width, sub.width, en.width, markW);
   const cx = W / 2;
-  const H = pad + markH + 118 + 44 + 34 + pad;
+  const H = pad + markH + 118 + 56 + 34 + pad;
   const top = pad + markH;
   const body =
     `<g transform="translate(${cx - markW / 2} ${pad}) scale(${sc}) translate(${-MARK_BOX.x} ${-MARK_BOX.y})">${mark(c)}</g>` +
     `<g fill="${c.name}" transform="translate(${cx - name.width / 2} ${top + 100})">${name.svg}</g>` +
-    `<g fill="${c.sub}" transform="translate(${cx - sub.width / 2} ${top + 150})">${sub.svg}</g>` +
-    `<g fill="${c.en}" transform="translate(${cx - en.width / 2} ${top + 188})">${en.svg}</g>`;
+    `<g fill="${c.sub}" transform="translate(${cx - sub.width / 2} ${top + 164})">${sub.svg}</g>` +
+    `<g fill="${c.en}" transform="translate(${cx - en.width / 2} ${top + 202})">${en.svg}</g>`;
   return svgDoc(W, H, body);
 }
 

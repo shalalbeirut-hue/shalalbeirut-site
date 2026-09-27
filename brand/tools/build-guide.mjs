@@ -37,7 +37,7 @@ const rev = {
 const html = `<title>هوية شلال بيروت</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@700&family=Readex+Pro:wght@400;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@400;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
 <style>
 :root{
   --bg:#F2F6F3; --surface:#FFFFFF; --ink:#14211B; --muted:#56665E; --line:#D8E1DB; --chip:#E6EDE8;
@@ -99,7 +99,7 @@ section{display:flex;flex-direction:column;gap:18px}
 .spec .sample{grid-column:1/-1}
 .spec .role{font-weight:600}
 .spec .fam{font-family:"Readex Pro",sans-serif;font-size:.85rem;color:var(--muted);direction:ltr}
-.s-display{font-family:"Reem Kufi",sans-serif;font-weight:700;font-size:clamp(2rem,6vw,3.2rem);line-height:1.2;color:var(--cedar)}
+.s-display{font-family:"Readex Pro","IBM Plex Sans Arabic",sans-serif;font-weight:700;font-size:clamp(2rem,6vw,3.2rem);line-height:1.2;color:var(--cedar)}
 :root[data-theme="dark"] .s-display{color:#8FD0A8}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .s-display{color:#8FD0A8}}
 .s-body{font-size:1.1rem}
@@ -125,7 +125,7 @@ section{display:flex;flex-direction:column;gap:18px}
 .phone .st2{font-size:.85rem;color:#8696A0}
 .sticker{width:220px;height:220px;border-radius:50%;background:#fff;border:6px solid #17583A;margin-inline:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:#17583A;text-align:center}
 .sticker svg{width:64px}
-.sticker .w{font-family:"Reem Kufi",sans-serif;font-weight:700;font-size:1.7rem;line-height:1}
+.sticker .w{font-family:"Readex Pro",sans-serif;font-weight:700;font-size:1.6rem;line-height:1}
 .sticker .d{font-size:.8rem;color:#2E4A3C}
 .sticker .n{font-family:"Readex Pro",sans-serif;font-size:.7rem;letter-spacing:.18em;color:#1B8CC4}
 .appicon{width:120px;height:120px;border-radius:28px;background:var(--deep);display:flex;align-items:center;justify-content:center;margin-inline:auto}
@@ -186,7 +186,7 @@ a{color:var(--water-text)}
     <div class="sec-head"><span class="eyebrow">04 · الخطوط</span><h2>الخطوط</h2>
       <p class="muted">كلها من Google Fonts مجاناً، وبتدعم العربي كويس.</p></div>
     <div class="type">
-      <div class="spec"><span class="role">العناوين الكبيرة والشعار</span><span class="fam">Reem Kufi · Bold 700</span><div class="sample s-display">في الموعد.. وبالضمان</div></div>
+      <div class="spec"><span class="role">العناوين الكبيرة والشعار</span><span class="fam">Readex Pro · Bold 700</span><div class="sample s-display">في الموعد.. وبالضمان</div></div>
       <div class="spec"><span class="role">النص العربي</span><span class="fam">IBM Plex Sans Arabic · 400/500/600</span><div class="sample s-body">نحدد لك وقت الوصول، ونشرح لك المشكلة والتكلفة قبل الشغل، وما نبدأ إلا بموافقتك. وكل قطعة من محلنا عليها ملصق ضمان.</div></div>
       <div class="spec"><span class="role">الإنجليزي والأرقام</span><span class="fam">Readex Pro · 400/600</span><div class="sample s-latin">On time. Guaranteed.</div></div>
     </div>

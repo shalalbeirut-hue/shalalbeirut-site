@@ -11,18 +11,26 @@ const t = UI[lang];
 const ar = lang === 'ar';
 ---
 {kind === 'services' && (
-  <div class="grid grid-3">
-    {SERVICES.filter((s) => s.slug !== exclude).map((s) => (
-      <article class="card svc">
-        <div class="icon-badge"><Icon name={s.icon} /></div>
-        <h3><a href={href(lang, `/services/${s.slug}/`)}>{s[lang].name}</a></h3>
-        <p class="muted">{s[lang].short}</p>
-        <div class="svc-foot">
-          <a class="svc-link" href={href(lang, `/services/${s.slug}/`)}>{t.learnMore}<Icon name="arrow" class="dir-arrow" /></a>
-          <a class="svc-wa" href={waLink(`${t.waHello}: ${s[lang].name}`)}><Icon name="whatsapp" />{t.orderThis}</a>
-        </div>
-      </article>
-    ))}
+  <div class="svc-grid">
+    {SERVICES.filter((s) => s.slug !== exclude).map((s) => {
+      const from = s.prices.map((p) => p.from).filter((v): v is number => v != null);
+      const min = from.length ? Math.min(...from) : null;
+      return (
+        <article class="svc">
+          <div class="svc-top">
+            <span class="svc-icon"><Icon name={s.icon} /></span>
+            <span class="svc-price">{min != null ? <>{t.fromPrice} <b>{min} {t.kd}</b></> : (ar ? 'السعر بعد المعاينة' : 'Priced after inspection')}</span>
+          </div>
+          <h3><a class="svc-title" href={href(lang, `/services/${s.slug}/`)}>{s[lang].name}</a></h3>
+          <p class="svc-desc">{s[lang].short}</p>
+          <ul class="svc-tags">{s[lang].includes.slice(0, 3).map((i) => <li>{i}</li>)}</ul>
+          <div class="svc-foot">
+            <a class="svc-btn svc-btn-wa" href={waLink(`${t.waHello}: ${s[lang].name}`)}><Icon name="whatsapp" />{ar ? 'اطلبها' : 'Request'}</a>
+            <a class="svc-btn svc-btn-more" href={href(lang, `/services/${s.slug}/`)} aria-label={`${t.learnMore}: ${s[lang].name}`}>{t.learnMore}<Icon name="arrow" class="dir-arrow" /></a>
+          </div>
+        </article>
+      );
+    })}
   </div>
 )}
 
@@ -69,14 +77,29 @@ const ar = lang === 'ar';
 )}
 
 <style>
-  .svc h3 a { color: inherit; text-decoration: none; }
-  .svc h3 a:hover { text-decoration: underline; }
-  .svc-foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 6px; border-top: 1px solid var(--line); }
-  .svc-link, .svc-wa { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-weight: 600; font-size: 0.95rem; padding-block: 8px; }
-  .svc-link { color: var(--water-text); }
-  .svc-wa { color: var(--cedar); }
-  .svc-wa :global(svg),
-  .svc-link :global(svg) { width: 18px; height: 18px; }
+  .svc-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+  .svc { position: relative; display: flex; flex-direction: column; gap: 12px; background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 24px; transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s; }
+  .svc:hover { border-color: #a9c8b6; box-shadow: 0 16px 36px rgba(15, 42, 31, 0.1); transform: translateY(-3px); }
+  .svc-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+  .svc-icon { width: 60px; height: 60px; border-radius: 18px; display: grid; place-items: center; color: #fff; background: linear-gradient(145deg, var(--cedar), var(--deep)); position: relative; flex-shrink: 0; }
+  .svc-icon::after { content: ''; position: absolute; inset-inline-end: -4px; top: -4px; width: 14px; height: 14px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); background: var(--water); border: 2px solid #fff; }
+  .svc-icon :global(svg) { width: 30px; height: 30px; }
+  .svc-price { font-size: 0.85rem; color: var(--slate); background: var(--mist); border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
+  .svc-price b { color: var(--cedar); font-family: var(--f-latin); }
+  .svc h3 { font-size: 1.3rem; }
+  .svc-title { color: inherit; text-decoration: none; }
+  .svc-title::after { content: ''; position: absolute; inset: 0; border-radius: 20px; }
+  .svc-desc { color: var(--slate); }
+  .svc-tags { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .svc-tags li { font-size: 0.82rem; color: var(--cedar); background: var(--cedar-050); border-radius: 8px; padding: 3px 10px; }
+  .svc-foot { margin-top: auto; padding-top: 14px; display: flex; gap: 10px; }
+  .svc-btn { position: relative; z-index: 1; flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; border-radius: 12px; font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: background 0.15s, color 0.15s; }
+  .svc-btn :global(svg) { width: 18px; height: 18px; }
+  .svc-btn-wa { background: var(--cedar); color: #fff; }
+  .svc-btn-wa:hover { background: var(--cedar-600); color: #fff; }
+  .svc-btn-more { background: var(--mist); color: var(--cedar); }
+  .svc-btn-more:hover { background: var(--cedar-050); color: var(--cedar); }
+  @media (prefers-reduced-motion: reduce) { .svc:hover { transform: none; } }
   :global(html[dir='rtl'] .dir-arrow) { transform: scaleX(-1); }
 
   .principle { display: flex; gap: 16px; align-items: flex-start; padding: 6px 0; }

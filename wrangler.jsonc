@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "shalalbeirut",
+  "compatibility_date": "2026-09-27",
+  "assets": { "directory": "./public" },
+  "routes": [
+    { "pattern": "shalalbeirut.com", "custom_domain": true },
+    { "pattern": "www.shalalbeirut.com", "custom_domain": true }
+  ]
+}

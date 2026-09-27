@@ -6,7 +6,8 @@ import {
 } from '../lib';
 import { useLoad, Loading, ErrorBox, StatusBadge, Stars, Icon, Field, Btn, Modal, useAction, ServiceChips } from '../ui';
 import { useApp } from './App';
-import { DocCard, FinishModal } from './Docs';
+import { DocCard, FinishModal, DOC } from './Docs';
+import { printOrder } from '../print';
 
 const ACTION_AR: Record<string, string> = {
   created: 'انضاف الطلب', assigned: 'انسند', on_the_way: 'الفني طلع بالطريق', started: 'بدأ الشغل', photo: 'انضافت صورة',
@@ -46,7 +47,7 @@ export function OrderView({ id }: { id: number }) {
           <a class="small" href={office ? '/app/orders/' : '/app/'}>← {office ? 'الطلبات' : 'زياراتي'}</a>
           <h1>{c.name} <span class="muted num" style="font-size:1rem">{o.code}</span></h1>
         </div>
-        <span class="row">{o.priority === 'urgent' && <span class="badge urgent">مستعجل</span>}<StatusBadge status={o.status} /></span>
+        <span class="row">{o.priority === 'urgent' && <span class="badge urgent">مستعجل</span>}<StatusBadge status={o.status} /><Btn variant="sm no-print" icon="receipt" onClick={() => printOrder(data, (st) => DOC[st]?.label ?? st)}>اطبع الطلب</Btn></span>
       </div>
       <ErrorBox error={act.error} />
 

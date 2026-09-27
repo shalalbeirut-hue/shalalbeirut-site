@@ -9,6 +9,7 @@ import { Orders, NewOrder } from './Orders';
 import { OrderView } from './Order';
 import { Followups, Surveys, Invoices, Customers, CustomerView } from './Office';
 import { Team, Services } from './Admin';
+import { Reports } from './Reports';
 import { Notifications } from './Notifications';
 
 export type User = { id: number; name: string; phone: string; role: 'admin' | 'manager' | 'cs' | 'tech'; must_change_pass: number };
@@ -28,6 +29,7 @@ const NAV: NavItem[] = [
   { path: '/customers', label: 'العملاء', icon: 'user', roles: ['admin', 'manager', 'cs'] },
   { path: '/invoices', label: 'العروض والفواتير', icon: 'receipt', roles: ['admin', 'manager', 'cs'] },
   { path: '/surveys', label: 'الاستبيانات', icon: 'star', roles: ['admin', 'manager', 'cs'] },
+  { path: '/reports', label: 'التقارير', icon: 'chart', roles: ['admin', 'manager', 'cs'] },
   { path: '/team', label: 'الفريق', icon: 'users', roles: ['admin', 'manager'] },
   { path: '/services', label: 'الخدمات والأسعار', icon: 'tag', roles: ['admin', 'manager'] },
   { path: '/notifications', label: 'التنبيهات', icon: 'bell', roles: ['tech'], badge: 'unread' },
@@ -87,6 +89,7 @@ export default function App() {
   else if (seg[0] === 'invoices') page = <Invoices />;
   else if (seg[0] === 'customers' && seg[1]) page = <CustomerView id={Number(seg[1])} />;
   else if (seg[0] === 'customers') page = <Customers />;
+  else if (seg[0] === 'reports') page = <Reports />;
   else if (seg[0] === 'team') page = <Team />;
   else if (seg[0] === 'services') page = <Services />;
   else if (seg[0] === 'notifications') page = <Notifications />;

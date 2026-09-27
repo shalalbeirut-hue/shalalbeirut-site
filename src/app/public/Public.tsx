@@ -27,6 +27,10 @@ export function InvoicePage() {
   const st: string = i.doc_status;
   const save = (format: 'pdf' | 'png') => act.run(async () => { const { downloadDoc } = await import('../doc/export'); await downloadDoc(token, format); });
   const list = photos.data?.photos ?? [];
+  if (new URLSearchParams(location.search).get('print') === '1' && !(window as any).__printed) {
+    (window as any).__printed = true;
+    setTimeout(() => window.print(), 700);
+  }
   return (
     <div class="center-page" style="gap:14px">
       <DocSheet doc={i} />

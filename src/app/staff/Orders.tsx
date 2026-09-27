@@ -2,6 +2,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { api, fmtDateTime, fmtTime, phoneDisplay, SOURCE, GOVERNORATES, kuwaitLocalToIso } from '../lib';
 import { useLoad, Loading, ErrorBox, StatusBadge, Icon, Field, Btn, useAction, ServiceChips, AreaPicker } from '../ui';
 import { useApp } from './App';
+import { printOrders } from '../print';
 
 const TABS: [string, string][] = [['open', 'المفتوحة'], ['new', 'جديدة'], ['reopened', 'أعيد فتحها'], ['done', 'تنتظر المتابعة'], ['closed', 'مغلقة'], ['', 'الكل']];
 
@@ -40,6 +41,14 @@ function OfficeOrders() {
   const arrow = (col: 'visit' | 'created') => (f.sort === col + '_asc' ? ' ↑' : f.sort === col + '_desc' ? ' ↓' : '');
   const active = [f.gov, f.area, f.tech, f.service, f.from, f.to].filter(Boolean).length;
   const preset = (by: string, d: string) => f.date_by === by && f.from === d && f.to === d;
+  const filtersText = () => [
+    TABS.find(([k]) => k === f.status)?.[1],
+    f.q && `بحث: ${f.q}`,
+    f.gov && `${f.gov}${f.area ? ' - ' + f.area : ''}`,
+    f.tech && `الفني: ${techs.data?.users.find((u: any) => String(u.id) === f.tech)?.name ?? ''}`,
+    f.service && `الخدمة: ${services.data?.services.find((s: any) => String(s.id) === f.service)?.name_ar ?? ''}`,
+    (f.from || f.to) && `${f.date_by === 'created' ? 'التسجيل' : 'الزيارة'}: ${f.from || '…'} إلى ${f.to || '…'}`,
+  ].filter(Boolean).join(' · ');
 
   return (
     <div>
@@ -47,21 +56,22 @@ function OfficeOrders() {
         <h1>الطلبات {data && <span class="muted small">({data.orders.length})</span>}</h1>
         <div class="row">
           <Btn icon="refresh" variant="ghost" onClick={reload}>تحديث</Btn>
+          {data?.orders.length > 0 && <Btn icon="receipt" onClick={() => printOrders(data.orders, filtersText())}>اطبع القائمة</Btn>}
           <a class="btn primary" href="/app/orders/new/"><Icon name="plus" />طلب جديد</a>
         </div>
       </div>
 
-      <form class="row" style="margin-bottom:10px" onSubmit={(e) => { e.preventDefault(); set({ q }); }}>
+      <form class="row no-print" style="margin-bottom:10px" onSubmit={(e) => { e.preventDefault(); set({ q }); }}>
         <input id="orders-q" class="input grow" placeholder="ابحث برقم الطلب أو اسم العميل أو رقمه" value={q} onInput={(e) => setQ(e.currentTarget.value)} />
         <button class="btn" type="submit"><Icon name="search" />بحث</button>
         <button type="button" class={`btn ${active ? 'water' : ''}`} onClick={() => setShowFilters(!showFilters)}>فلترة{active ? ` (${active})` : ''}</button>
       </form>
 
-      <div class="tabs" role="tablist">
+      <div class="tabs no-print" role="tablist">
         {TABS.map(([k, l]) => <button role="tab" aria-selected={f.status === k} class={f.status === k ? 'on' : ''} onClick={() => set({ status: k })}>{l}</button>)}
       </div>
 
-      <div class="tabs">
+      <div class="tabs no-print">
         <button class={preset('visit', kwDay()) ? 'on' : ''} onClick={() => set({ date_by: 'visit', from: kwDay(), to: kwDay(), sort: 'visit_asc' })}>زيارات اليوم</button>
         <button class={preset('visit', kwDay(1)) ? 'on' : ''} onClick={() => set({ date_by: 'visit', from: kwDay(1), to: kwDay(1), sort: 'visit_asc' })}>زيارات بكرة</button>
         <button class={preset('created', kwDay()) ? 'on' : ''} onClick={() => set({ date_by: 'created', from: kwDay(), to: kwDay(), sort: 'created_desc' })}>انسجلت اليوم</button>
@@ -69,7 +79,7 @@ function OfficeOrders() {
       </div>
 
       {showFilters && (
-        <div class="card" style="margin-bottom:12px">
+        <div class="card no-print" style="margin-bottom:12px">
           <div class="grid2">
             <AreaPicker idPrefix="of" gov={f.gov} area={f.area} allowAny onChange={(gov, area) => set({ gov, area })} />
             <Field label="الفني">
@@ -105,6 +115,11 @@ function OfficeOrders() {
         </div>
       )}
 
+      <div class="print-only print-head">
+        <b>شلال بيروت · قائمة الطلبات ({data?.orders.length ?? 0})</b>
+        <span>{TABS.find(([k]) => k === f.status)?.[1]}{f.q ? ` · بحث: ${f.q}` : ''}{f.gov ? ` · ${f.gov}${f.area ? ' - ' + f.area : ''}` : ''}{f.from || f.to ? ` · ${f.date_by === 'created' ? 'التسجيل' : 'الزيارة'}: ${f.from || '…'} إلى ${f.to || '…'}` : ''}</span>
+        <span>طُبع: {fmtDateTime(new Date().toISOString())}</span>
+      </div>
       <ErrorBox error={error} />
       {loading && !data ? <Loading /> : data?.orders.length === 0 ? <div class="empty">ما في طلبات بهالفلترة.</div> : (
         <div class="table-wrap">

@@ -271,57 +271,114 @@ const ORDER_LIST_SQL = `
          o.started_at, o.finished_at, o.tech_id,
          c.name AS customer_name, c.phone AS customer_phone,
          a.governorate, a.area, a.block,
-         (SELECT GROUP_CONCAT(sx.name_ar, '، ') FROM order_services osx JOIN services sx ON sx.id = osx.service_id WHERE osx.order_id = o.id) AS service, u.name AS tech_name
+         (SELECT GROUP_CONCAT(sx.name_ar, '، ') FROM order_services osx JOIN services sx ON sx.id = osx.service_id WHERE osx.order_id = o.id) AS service, u.name AS tech_name,
+         i.number AS doc_number, i.doc_status, i.total_fils, i.paid_fils, i.payment_status, i.invoiced_at,
+         (SELECT w.months FROM warranties w WHERE w.order_id = o.id ORDER BY w.id DESC LIMIT 1) AS warranty_months,
+         (SELECT sv.rating_overall FROM surveys sv WHERE sv.order_id = o.id) AS rating
   FROM orders o
   JOIN customers c ON c.id = o.customer_id
   LEFT JOIN addresses a ON a.id = o.address_id
-  LEFT JOIN services s ON s.id = o.service_id
-  LEFT JOIN users u ON u.id = o.tech_id`;
+  LEFT JOIN users u ON u.id = o.tech_id
+  LEFT JOIN invoices i ON i.id = (SELECT id FROM invoices WHERE order_id = o.id AND doc_status != 'cancelled' ORDER BY id DESC LIMIT 1)`;
 
-api.get('/orders', requireStaff(), async (c) => {
+/**
+ * Filters shared by the orders list and reports.
+ * q (code, name or phone), code, customer, phone, tech, unassigned, status, service, gov, area,
+ * doc (quote|work_order|invoice|paid|none), pay (paid|partial|unpaid), date_by (visit|created|finished|invoiced), from, to (Kuwait days).
+ */
+function orderFilters(c: C) {
   const user = me(c);
   const where: string[] = [];
   const args: unknown[] = [];
-  const add = (sql: string, v: unknown) => { args.push(v); where.push(sql.replace('?', `?${args.length}`)); };
+  const add = (sql: string, v: unknown) => { args.push(v); where.push(sql.split('?').join(`?${args.length}`)); };
+  const qv = (k: string, max = 60) => str(c.req.query(k), max);
   if (user.role === 'tech') add('o.tech_id = ?', user.id);
   const status = c.req.query('status');
   if (status === 'open') where.push(`o.status IN ('new','assigned','on_the_way','in_progress','reopened')`);
   else if (status) add('o.status = ?', status);
-  if (c.req.query('tech')) add('o.tech_id = ?', int(c.req.query('tech')));
-  if (c.req.query('day') === 'today') {
-    const start = new Date(); start.setUTCHours(-3, 0, 0, 0); // Kuwait midnight (UTC+3)
-    if (start.getTime() > Date.now()) start.setUTCDate(start.getUTCDate() - 1);
-    add('COALESCE(o.scheduled_at, o.created_at) >= ?', start.toISOString());
-    add('COALESCE(o.scheduled_at, o.created_at) < ?', new Date(start.getTime() + 86400_000).toISOString());
-  }
-  const q = str(c.req.query('q'), 60);
-  if (q) { args.push(`%${q}%`); const n = args.length; where.push(`(o.code LIKE ?${n} OR c.name LIKE ?${n} OR c.phone LIKE ?${n})`); }
-  const gov = str(c.req.query('gov'), 40);
-  if (gov) add('a.governorate = ?', gov);
-  const area = str(c.req.query('area'), 60);
-  if (area) add('a.area = ?', area);
-  if (c.req.query('service')) add('EXISTS (SELECT 1 FROM order_services osf WHERE osf.order_id = o.id AND osf.service_id = ?)', int(c.req.query('service')));
+  if (int(c.req.query('tech'))) add('o.tech_id = ?', int(c.req.query('tech')));
   if (c.req.query('unassigned')) where.push('o.tech_id IS NULL');
-  // Date range on the visit date or the registration date. from/to are Kuwait calendar days (YYYY-MM-DD).
-  const dateCol = c.req.query('date_by') === 'created' ? 'o.created_at' : 'o.scheduled_at';
+  const q = qv('q');
+  if (q) add('(o.code LIKE ? OR c.name LIKE ? OR c.phone LIKE ?)', `%${q}%`);
+  const code = qv('code', 30);
+  if (code) add('o.code LIKE ?', `%${code}%`);
+  const customer = qv('customer');
+  if (customer) add('c.name LIKE ?', `%${customer}%`);
+  const phone = qv('phone', 20)?.replace(/\D/g, '');
+  if (phone) add('(c.phone LIKE ? OR c.phone2 LIKE ?)', `%${phone}%`);
+  const gov = qv('gov', 40);
+  if (gov) add('a.governorate = ?', gov);
+  const area = qv('area');
+  if (area) add('a.area = ?', area);
+  if (int(c.req.query('service'))) add('EXISTS (SELECT 1 FROM order_services osf WHERE osf.order_id = o.id AND osf.service_id = ?)', int(c.req.query('service')));
+  const doc = c.req.query('doc');
+  if (doc === 'none') where.push('i.id IS NULL');
+  else if (['quote', 'work_order', 'invoice', 'paid'].includes(doc ?? '')) add('i.doc_status = ?', doc);
+  const pay = c.req.query('pay');
+  if (['paid', 'partial', 'unpaid'].includes(pay ?? '')) { add('i.payment_status = ?', pay); where.push(`i.doc_status IN ('invoice','paid')`); }
+  const DATE_COLS: Record<string, string> = { visit: 'o.scheduled_at', created: 'o.created_at', finished: 'o.finished_at', invoiced: 'i.invoiced_at' };
+  const dateCol = DATE_COLS[c.req.query('date_by') ?? ''] ?? 'o.scheduled_at';
   const day = (v: string | undefined, end = false) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? new Date(`${v}T${end ? '24:00' : '00:00'}:00+03:00`).toISOString() : null);
   const from = day(c.req.query('from'));
   const to = day(c.req.query('to'), true);
   if (from) add(`${dateCol} >= ?`, from);
   if (to) add(`${dateCol} < ?`, to);
-  // Sorting: visit or registration date, either direction. Default keeps urgent states first.
   const SORTS: Record<string, string> = {
     visit_asc: 'o.scheduled_at IS NULL, o.scheduled_at ASC',
     visit_desc: 'o.scheduled_at IS NULL, o.scheduled_at DESC',
     created_desc: 'o.created_at DESC',
     created_asc: 'o.created_at ASC',
+    total_desc: 'i.total_fils IS NULL, i.total_fils DESC',
   };
-  const sort = SORTS[c.req.query('sort') ?? ''];
-  const order = sort ?? `CASE o.status WHEN 'new' THEN 0 WHEN 'reopened' THEN 1 WHEN 'in_progress' THEN 2 WHEN 'on_the_way' THEN 3 WHEN 'assigned' THEN 4 ELSE 5 END,
+  const order = SORTS[c.req.query('sort') ?? ''] ?? `CASE o.status WHEN 'new' THEN 0 WHEN 'reopened' THEN 1 WHEN 'in_progress' THEN 2 WHEN 'on_the_way' THEN 3 WHEN 'assigned' THEN 4 ELSE 5 END,
     COALESCE(o.scheduled_at, o.created_at) ${user.role === 'tech' ? 'ASC' : 'DESC'}`;
-  const sql = `${ORDER_LIST_SQL} ${where.length ? 'WHERE ' + where.join(' AND ') : ''} ORDER BY ${order} LIMIT 300`;
-  const rows = await c.env.DB.prepare(sql).bind(...args).all();
+  return { where: where.length ? 'WHERE ' + where.join(' AND ') : '', args, order };
+}
+
+api.get('/orders', requireStaff(), async (c) => {
+  const f = orderFilters(c);
+  const rows = await c.env.DB.prepare(`${ORDER_LIST_SQL} ${f.where} ORDER BY ${f.order} LIMIT 300`).bind(...f.args).all();
   return c.json({ orders: rows.results });
+});
+
+/** Reports: the same filters, more rows, with totals and breakdowns by technician, service and governorate. */
+api.get('/reports', requireStaff(...OFFICE), async (c) => {
+  const f = orderFilters(c);
+  const rows = (await c.env.DB.prepare(`${ORDER_LIST_SQL} ${f.where} ORDER BY ${f.order} LIMIT 2000`).bind(...f.args).all<any>()).results;
+  const billed = (r: any) => r.doc_status === 'invoice' || r.doc_status === 'paid';
+  const group = (key: (r: any) => string[]) => {
+    const m = new Map<string, { name: string; orders: number; done: number; billed_fils: number; paid_fils: number; ratings: number[] }>();
+    for (const r of rows) for (const k of key(r)) {
+      const g = m.get(k) ?? { name: k, orders: 0, done: 0, billed_fils: 0, paid_fils: 0, ratings: [] };
+      g.orders++;
+      if (['done', 'closed'].includes(r.status)) g.done++;
+      if (billed(r)) { g.billed_fils += r.total_fils ?? 0; g.paid_fils += r.paid_fils ?? 0; }
+      if (r.rating) g.ratings.push(r.rating);
+      m.set(k, g);
+    }
+    return [...m.values()].map(({ ratings, ...g }) => ({ ...g, rating: ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : null }))
+      .sort((a, b) => b.orders - a.orders);
+  };
+  const byStatus: Record<string, number> = {};
+  for (const r of rows) byStatus[r.status] = (byStatus[r.status] ?? 0) + 1;
+  const ratings = rows.map((r) => r.rating).filter(Boolean);
+  const summary = {
+    orders: rows.length,
+    by_status: byStatus,
+    billed_fils: rows.filter(billed).reduce((s, r) => s + (r.total_fils ?? 0), 0),
+    paid_fils: rows.filter(billed).reduce((s, r) => s + (r.paid_fils ?? 0), 0),
+    quotes_fils: rows.filter((r) => r.doc_status === 'quote' || r.doc_status === 'work_order').reduce((s, r) => s + (r.total_fils ?? 0), 0),
+    invoices: rows.filter(billed).length,
+    rating: ratings.length ? ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length : null,
+    truncated: rows.length === 2000,
+  };
+  return c.json({
+    summary,
+    by_tech: group((r) => [r.tech_name ?? 'ما انسند']),
+    by_service: group((r) => (r.service ? String(r.service).split('، ') : ['بدون خدمة'])),
+    by_gov: group((r) => [r.governorate ?? 'بدون عنوان']),
+    rows,
+  });
 });
 
 async function getOrderFor(c: C, id: number) {

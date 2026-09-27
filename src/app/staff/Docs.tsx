@@ -274,6 +274,7 @@ export function DocCard({ order, doc, customer, serviceIds, canEdit, onChanged, 
             {(st === 'invoice' || st === 'paid') && <Btn variant="primary" icon="wa" busy={act.busy} onClick={sendInvoice}>{doc.sent_at ? 'أرسل الفاتورة مرة ثانية' : 'أرسل الفاتورة على الواتساب'}</Btn>}
             {st === 'invoice' && onPayment && <Btn icon="check" onClick={onPayment}>سجّل الدفع (مسددة)</Btn>}
             <a class="btn sm" href={`/i/${doc.public_token}`} target="_blank" rel="noopener"><Icon name="receipt" />شكله عند العميل</a>
+            <a class="btn sm" href={`/i/${doc.public_token}?print=1`} target="_blank" rel="noopener">اطبع {DOC[st]?.label ?? ''}</a>
           </div>
           <div class="row">
             <span class="small muted">أرسله ملف:</span>

@@ -149,3 +149,17 @@ export function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) 
     </div>
   );
 }
+
+/** Tap-to-toggle service chips (an order can have several services). */
+export function ServiceChips({ services, value, onChange }: { services: any[]; value: number[]; onChange: (ids: number[]) => void }) {
+  const toggle = (id: number) => onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id]);
+  return (
+    <div class="svc-chips" role="group" aria-label="الخدمات">
+      {services.filter((s) => s.active).map((s) => (
+        <button type="button" aria-pressed={value.includes(s.id)} class={value.includes(s.id) ? 'on' : ''} onClick={() => toggle(s.id)}>
+          {value.includes(s.id) ? '✓ ' : ''}{s.name_ar}
+        </button>
+      ))}
+    </div>
+  );
+}

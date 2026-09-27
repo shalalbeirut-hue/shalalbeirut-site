@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'preact/hooks';
 import { api, fmtDateTime, fmtTime, phoneDisplay, SOURCE, GOVERNORATES, kuwaitLocalToIso } from '../lib';
-import { useLoad, Loading, ErrorBox, StatusBadge, Icon, Field, Btn, useAction } from '../ui';
+import { useLoad, Loading, ErrorBox, StatusBadge, Icon, Field, Btn, useAction, ServiceChips } from '../ui';
 import { useApp } from './App';
 
 const TABS: [string, string][] = [['open', 'المفتوحة'], ['new', 'جديدة'], ['reopened', 'أعيد فتحها'], ['done', 'تنتظر المتابعة'], ['closed', 'مغلقة'], ['', 'الكل']];
@@ -63,7 +63,8 @@ export function NewOrder() {
   const [name, setName] = useState('');
   const [addressId, setAddressId] = useState<string>('new');
   const [addr, setAddr] = useState<any>({ governorate: GOVERNORATES[1], area: '', block: '', street: '', avenue: '', building: '', floor: '', flat: '', maps_url: '', notes: '' });
-  const [f, setF] = useState<any>({ service_id: '', description: '', source: 'whatsapp', priority: 'normal', preferred_time: '', scheduled_at: '', tech_id: '' });
+  const [serviceIds, setServiceIds] = useState<number[]>([]);
+  const [f, setF] = useState<any>({ description: '', source: 'whatsapp', priority: 'normal', preferred_time: '', scheduled_at: '', tech_id: '' });
   const { busy, error, run } = useAction();
 
   useEffect(() => {
@@ -87,7 +88,7 @@ export function NewOrder() {
           customer: found ? { id: found.id } : { name, phone },
           address_id: addressId !== 'new' ? Number(addressId) : undefined,
           address: addressId === 'new' ? addr : undefined,
-          service_id: f.service_id ? Number(f.service_id) : undefined,
+          service_ids: serviceIds,
           description: f.description, source: f.source, priority: f.priority, preferred_time: f.preferred_time,
           scheduled_at: kuwaitLocalToIso(f.scheduled_at), tech_id: f.tech_id ? Number(f.tech_id) : undefined,
         },
@@ -139,16 +140,13 @@ export function NewOrder() {
       <div class="card stack">
         <h2>الطلب</h2>
         <div class="grid2">
-          <Field label="الخدمة">
-            <select id="no-service" class="input" value={f.service_id} onChange={set('service_id')}>
-              <option value="">اختار الخدمة</option>
-              {services.data?.services.filter((s: any) => s.active).map((s: any) => <option value={s.id}>{s.name_ar}</option>)}
-            </select>
-          </Field>
           <Field label="مصدر الطلب"><select id="no-source" class="input" value={f.source} onChange={set('source')}>{Object.entries(SOURCE).map(([k, v]) => <option value={k}>{v}</option>)}</select></Field>
           <Field label="الأولوية"><select id="no-priority" class="input" value={f.priority} onChange={set('priority')}><option value="normal">عادي</option><option value="urgent">مستعجل</option></select></Field>
           <Field label="الوقت اللي يناسب العميل"><input id="no-pref" class="input" placeholder="مثلاً: بكرة العصر" value={f.preferred_time} onInput={set('preferred_time')} /></Field>
         </div>
+        <Field label="الخدمات المطلوبة" hint="تقدر تختار أكثر من خدمة">
+          <ServiceChips services={services.data?.services ?? []} value={serviceIds} onChange={setServiceIds} />
+        </Field>
         <Field label="شنو المشكلة؟"><textarea id="no-desc" class="input" value={f.description} onInput={set('description')} /></Field>
       </div>
 

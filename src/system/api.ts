@@ -195,7 +195,7 @@ api.get('/customers/:id', requireStaff(...OFFICE), async (c) => {
   if (!cust) throw notFound();
   const [addrs, orders, invoices, warranties] = await c.env.DB.batch([
     c.env.DB.prepare('SELECT * FROM addresses WHERE customer_id = ?1 ORDER BY id DESC').bind(id),
-    c.env.DB.prepare(`SELECT o.id, o.code, o.status, o.created_at, o.finished_at, s.name_ar AS service, u.name AS tech
+    c.env.DB.prepare(`SELECT o.id, o.code, o.status, o.created_at, o.finished_at, (SELECT GROUP_CONCAT(sx.name_ar, '، ') FROM order_services osx JOIN services sx ON sx.id = osx.service_id WHERE osx.order_id = o.id) AS service, u.name AS tech
       FROM orders o LEFT JOIN services s ON s.id = o.service_id LEFT JOIN users u ON u.id = o.tech_id
       WHERE o.customer_id = ?1 ORDER BY o.id DESC`).bind(id),
     c.env.DB.prepare(`SELECT id, number, doc_status, issued_at, total_fils, payment_status, order_id FROM invoices WHERE customer_id = ?1 AND doc_status != 'cancelled' ORDER BY id DESC`).bind(id),
@@ -271,7 +271,7 @@ const ORDER_LIST_SQL = `
          o.started_at, o.finished_at, o.tech_id,
          c.name AS customer_name, c.phone AS customer_phone,
          a.governorate, a.area, a.block,
-         s.name_ar AS service, u.name AS tech_name
+         (SELECT GROUP_CONCAT(sx.name_ar, '، ') FROM order_services osx JOIN services sx ON sx.id = osx.service_id WHERE osx.order_id = o.id) AS service, u.name AS tech_name
   FROM orders o
   JOIN customers c ON c.id = o.customer_id
   LEFT JOIN addresses a ON a.id = o.address_id
@@ -316,7 +316,7 @@ api.get('/orders/:id', requireStaff(), async (c) => {
   const [cust, addr, svc, tech, photos, invoice, warranty, survey, followups, activity] = await c.env.DB.batch([
     c.env.DB.prepare('SELECT id, name, phone, phone2, notes FROM customers WHERE id = ?1').bind(o.customer_id),
     c.env.DB.prepare('SELECT * FROM addresses WHERE id = ?1').bind(o.address_id),
-    c.env.DB.prepare('SELECT * FROM services WHERE id = ?1').bind(o.service_id),
+    c.env.DB.prepare('SELECT s.* FROM order_services os JOIN services s ON s.id = os.service_id WHERE os.order_id = ?1 ORDER BY s.sort').bind(o.id),
     c.env.DB.prepare('SELECT id, name, phone FROM users WHERE id = ?1').bind(o.tech_id),
     c.env.DB.prepare('SELECT id, kind, created_at FROM order_photos WHERE order_id = ?1 ORDER BY id').bind(o.id),
     c.env.DB.prepare('SELECT * FROM invoices WHERE order_id = ?1 ORDER BY id DESC LIMIT 1').bind(o.id),
@@ -329,11 +329,26 @@ api.get('/orders/:id', requireStaff(), async (c) => {
   const inv = invoice.results[0] as any;
   const items = inv ? (await c.env.DB.prepare('SELECT * FROM invoice_items WHERE invoice_id = ?1 ORDER BY id').bind(inv.id).all()).results : [];
   return c.json({
-    order: o, customer: cust.results[0], address: addr.results[0] ?? null, service: svc.results[0] ?? null, tech: tech.results[0] ?? null,
+    order: o, customer: cust.results[0], address: addr.results[0] ?? null, service: svc.results[0] ?? null, services: svc.results, tech: tech.results[0] ?? null,
     photos: photos.results, invoice: inv ? { ...inv, items } : null, warranty: warranty.results[0] ?? null,
     survey: survey.results[0] ?? null, followups: followups.results, activity: activity.results,
   });
 });
+
+/** Service ids from a request: accepts service_ids (array) or a single service_id. */
+function serviceIds(b: Record<string, any>): number[] {
+  const raw: unknown[] = Array.isArray(b.service_ids) ? b.service_ids : b.service_id ? [b.service_id] : [];
+  const ids = raw.map((v) => int(v)).filter((v): v is number => v !== null && v > 0);
+  return [...new Set(ids)].slice(0, 10);
+}
+
+async function setOrderServices(c: C, orderId: number, ids: number[]) {
+  await c.env.DB.batch([
+    c.env.DB.prepare('DELETE FROM order_services WHERE order_id = ?1').bind(orderId),
+    ...ids.map((sid) => c.env.DB.prepare('INSERT INTO order_services (order_id, service_id) SELECT ?1, id FROM services WHERE id = ?2').bind(orderId, sid)),
+    c.env.DB.prepare('UPDATE orders SET service_id = ?1 WHERE id = ?2').bind(ids[0] ?? null, orderId),
+  ]);
+}
 
 async function createOrder(c: C, b: Record<string, any>, source: string, actorId: number | null) {
   const customerId = await upsertCustomer(c, b.customer ?? {});
@@ -345,9 +360,11 @@ async function createOrder(c: C, b: Record<string, any>, source: string, actorId
   const r = await c.env.DB.prepare(
     `INSERT INTO orders (code, customer_id, address_id, service_id, source, description, priority, preferred_time, scheduled_at, created_by)
      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10) RETURNING id`,
-  ).bind(code, customerId, addressId, int(b.service_id), source, str(b.description, 2000), b.priority === 'urgent' ? 'urgent' : 'normal',
+  ).bind(code, customerId, addressId, serviceIds(b)[0] ?? null, source, str(b.description, 2000), b.priority === 'urgent' ? 'urgent' : 'normal',
     str(b.preferred_time, 60), str(b.scheduled_at, 40), actorId).first<{ id: number }>();
   const id = r!.id;
+  const ids = serviceIds(b);
+  if (ids.length) await setOrderServices(c, id, ids);
   await logActivity(c.env, actorId, 'order', id, 'created', { source });
   if (source === 'website') {
     await notify(c.env, { role: 'cs' }, 'order.new', `طلب جديد من الموقع ${code}`, id);
@@ -369,10 +386,11 @@ api.patch('/orders/:id', requireStaff(...OFFICE), async (c) => {
   const id = int(c.req.param('id'))!;
   const b = await body(c);
   await c.env.DB.prepare(
-    `UPDATE orders SET service_id = COALESCE(?1, service_id), description = COALESCE(?2, description), priority = COALESCE(?3, priority),
-     preferred_time = COALESCE(?4, preferred_time), address_id = COALESCE(?5, address_id), updated_at = ?6 WHERE id = ?7`,
-  ).bind(int(b.service_id), str(b.description, 2000), b.priority === 'urgent' || b.priority === 'normal' ? b.priority : null,
+    `UPDATE orders SET description = COALESCE(?1, description), priority = COALESCE(?2, priority),
+     preferred_time = COALESCE(?3, preferred_time), address_id = COALESCE(?4, address_id), updated_at = ?5 WHERE id = ?6`,
+  ).bind(str(b.description, 2000), b.priority === 'urgent' || b.priority === 'normal' ? b.priority : null,
     str(b.preferred_time, 60), int(b.address_id), nowIso(), id).run();
+  if (Array.isArray(b.service_ids)) await setOrderServices(c, id, serviceIds(b));
   await logActivity(c.env, me(c).id, 'order', id, 'edited', b);
   return c.json({ ok: true });
 });
@@ -731,7 +749,7 @@ api.get('/followups', requireStaff(...OFFICE), async (c) => {
   const due = c.req.query('all') ? '' : 'AND f.due_at <= ?1';
   const rows = await c.env.DB.prepare(
     `SELECT f.id, f.due_at, f.order_id, o.code, o.finished_at, c.name AS customer_name, c.phone AS customer_phone,
-            s.name_ar AS service, u.name AS tech_name, sv.rating_overall, sv.submitted_at AS survey_at
+            (SELECT GROUP_CONCAT(sx.name_ar, '، ') FROM order_services osx JOIN services sx ON sx.id = osx.service_id WHERE osx.order_id = o.id) AS service, u.name AS tech_name, sv.rating_overall, sv.submitted_at AS survey_at
      FROM followups f JOIN orders o ON o.id = f.order_id JOIN customers c ON c.id = o.customer_id
      LEFT JOIN services s ON s.id = o.service_id LEFT JOIN users u ON u.id = o.tech_id LEFT JOIN surveys sv ON sv.order_id = o.id
      WHERE f.done_at IS NULL ${due} ORDER BY f.due_at LIMIT 200`,
@@ -776,7 +794,7 @@ api.get('/surveys', requireStaff(...OFFICE), async (c) => {
   if (pub) { args.push(pub); where.push(`s.publish_status = ?${args.length}`); }
   const w = 'WHERE ' + where.join(' AND ');
   const [rows, stats] = await c.env.DB.batch([
-    c.env.DB.prepare(`SELECT s.*, o.code, c.name AS customer_name, c.phone AS customer_phone, u.name AS tech_name, sv.name_ar AS service, a.area
+    c.env.DB.prepare(`SELECT s.*, o.code, c.name AS customer_name, c.phone AS customer_phone, u.name AS tech_name, (SELECT GROUP_CONCAT(sx.name_ar, '، ') FROM order_services osx JOIN services sx ON sx.id = osx.service_id WHERE osx.order_id = o.id) AS service, a.area
       FROM surveys s JOIN orders o ON o.id = s.order_id JOIN customers c ON c.id = o.customer_id LEFT JOIN users u ON u.id = o.tech_id
       LEFT JOIN services sv ON sv.id = o.service_id LEFT JOIN addresses a ON a.id = o.address_id ${w} ORDER BY s.submitted_at DESC LIMIT 500`).bind(...args),
     c.env.DB.prepare(`SELECT COUNT(*) AS n, AVG(s.rating_overall) AS overall, AVG(s.rating_tech) AS tech, AVG(s.rating_punctuality) AS punctuality
@@ -890,7 +908,7 @@ api.get('/my/summary', requireCustomer, async (c) => {
   const id = c.get('customerId')!;
   const [cust, orders, invoices, warranties] = await c.env.DB.batch([
     c.env.DB.prepare('SELECT name, phone FROM customers WHERE id = ?1').bind(id),
-    c.env.DB.prepare(`SELECT o.id, o.code, o.status, o.created_at, o.scheduled_at, o.finished_at, s.name_ar AS service, s.name_en AS service_en,
+    c.env.DB.prepare(`SELECT o.id, o.code, o.status, o.created_at, o.scheduled_at, o.finished_at, (SELECT GROUP_CONCAT(sx.name_ar, '، ') FROM order_services osx JOIN services sx ON sx.id = osx.service_id WHERE osx.order_id = o.id) AS service, s.name_en AS service_en,
         a.area, u.name AS tech_name, sv.token AS survey_token, sv.submitted_at AS survey_done,
         (SELECT COUNT(*) FROM order_photos p WHERE p.order_id = o.id) AS photos
       FROM orders o LEFT JOIN services s ON s.id = o.service_id LEFT JOIN addresses a ON a.id = o.address_id
@@ -898,7 +916,7 @@ api.get('/my/summary', requireCustomer, async (c) => {
       WHERE o.customer_id = ?1 AND o.status != 'cancelled' ORDER BY o.id DESC`).bind(id),
     c.env.DB.prepare(`SELECT i.number, i.doc_status, i.issued_at, i.total_fils, i.payment_status, i.public_token, o.code
       FROM invoices i JOIN orders o ON o.id = i.order_id WHERE i.customer_id = ?1 AND i.doc_status != 'cancelled' ORDER BY i.id DESC`).bind(id),
-    c.env.DB.prepare(`SELECT w.months, w.starts_at, w.ends_at, w.covers, o.code, s.name_ar AS service
+    c.env.DB.prepare(`SELECT w.months, w.starts_at, w.ends_at, w.covers, o.code, (SELECT GROUP_CONCAT(sx.name_ar, '، ') FROM order_services osx JOIN services sx ON sx.id = osx.service_id WHERE osx.order_id = o.id) AS service
       FROM warranties w JOIN orders o ON o.id = w.order_id LEFT JOIN services s ON s.id = o.service_id
       WHERE w.customer_id = ?1 ORDER BY w.ends_at DESC`).bind(id),
   ]);
@@ -918,7 +936,7 @@ api.get('/public/invoice/:token', async (c) => {
   const inv = await c.env.DB.prepare(
     `SELECT i.id, i.number, i.quote_number, i.doc_status, i.signature, i.signed_name, i.signed_at, i.signed_via, i.invoiced_at, i.paid_at,
             i.issued_at, i.subtotal_fils, i.discount_fils, i.total_fils, i.payment_status, i.paid_fils, i.payment_method, i.notes,
-            o.code, o.finished_at, c.name AS customer_name, s.name_ar AS service, u.name AS tech_name, a.governorate, a.area,
+            o.code, o.finished_at, c.name AS customer_name, (SELECT GROUP_CONCAT(sx.name_ar, '، ') FROM order_services osx JOIN services sx ON sx.id = osx.service_id WHERE osx.order_id = o.id) AS service, u.name AS tech_name, a.governorate, a.area,
             w.months, w.starts_at, w.ends_at, w.covers
      FROM invoices i JOIN orders o ON o.id = i.order_id JOIN customers c ON c.id = i.customer_id
      LEFT JOIN services s ON s.id = o.service_id LEFT JOIN users u ON u.id = o.tech_id LEFT JOIN addresses a ON a.id = o.address_id
@@ -930,9 +948,27 @@ api.get('/public/invoice/:token', async (c) => {
   return c.json({ invoice: { ...inv, items: items.results } });
 });
 
+/** Before/after photos on the customer's document page, authorised by the document link. */
+api.get('/public/doc/:token/photos', async (c) => {
+  const doc = await c.env.DB.prepare('SELECT order_id FROM invoices WHERE public_token = ?1').bind(c.req.param('token')).first<any>();
+  if (!doc) throw notFound();
+  const rows = await c.env.DB.prepare('SELECT id, kind FROM order_photos WHERE order_id = ?1 ORDER BY id').bind(doc.order_id).all();
+  return c.json({ photos: rows.results });
+});
+
+api.get('/public/doc/:token/photo/:id', async (c) => {
+  const p = await c.env.DB.prepare(
+    'SELECT p.r2_key, p.content_type FROM order_photos p JOIN invoices i ON i.order_id = p.order_id WHERE i.public_token = ?1 AND p.id = ?2',
+  ).bind(c.req.param('token'), int(c.req.param('id'))).first<any>();
+  if (!p) throw notFound();
+  const obj = await photos(c).get(p.r2_key);
+  if (!obj) throw notFound();
+  return new Response(obj.body, { headers: { 'content-type': p.content_type, 'cache-control': 'private, max-age=86400' } });
+});
+
 api.get('/public/survey/:token', async (c) => {
   const s = await c.env.DB.prepare(
-    `SELECT s.submitted_at, o.code, c.name AS customer_name, sv.name_ar AS service, u.name AS tech_name
+    `SELECT s.submitted_at, o.code, c.name AS customer_name, (SELECT GROUP_CONCAT(sx.name_ar, '، ') FROM order_services osx JOIN services sx ON sx.id = osx.service_id WHERE osx.order_id = o.id) AS service, u.name AS tech_name
      FROM surveys s JOIN orders o ON o.id = s.order_id JOIN customers c ON c.id = o.customer_id
      LEFT JOIN services sv ON sv.id = o.service_id LEFT JOIN users u ON u.id = o.tech_id WHERE s.token = ?1`,
   ).bind(c.req.param('token')).first<any>();
@@ -969,13 +1005,15 @@ api.post('/public/request', async (c) => {
   if (str(b.website)) return c.json({ ok: true }); // honeypot
   const phone = normalizePhone(b.phone);
   if (!phone || !str(b.name)) throw bad('اكتب اسمك ورقم موبايلك');
-  const svc = str(b.service_slug, 60)
-    ? await c.env.DB.prepare('SELECT id FROM services WHERE slug = ?1').bind(str(b.service_slug, 60)).first<{ id: number }>()
-    : null;
+  const slugs = (Array.isArray(b.service_slugs) ? b.service_slugs : [b.service_slug]).map((v: unknown) => str(v, 60)).filter((v: string | null): v is string => !!v).slice(0, 10);
+  const svcRows = slugs.length
+    ? (await c.env.DB.prepare(`SELECT id FROM services WHERE slug IN (${slugs.map((_: string, i: number) => '?' + (i + 1)).join(',')})`).bind(...slugs).all<{ id: number }>()).results
+    : [];
+  const svc = svcRows[0] ?? null;
   const res = await createOrder(c, {
     customer: { name: b.name, phone },
     address: str(b.governorate) ? { governorate: b.governorate, area: str(b.area) ?? str(b.block) ?? '-', block: str(b.block, 20) } : undefined,
-    service_id: svc?.id,
+    service_ids: svcRows.map((r) => r.id),
     description: [str(b.description, 1500), str(b.service_name, 80) && !svc ? `الخدمة: ${b.service_name}` : null].filter(Boolean).join('\n'),
     preferred_time: b.preferred_time,
   }, 'website', null);

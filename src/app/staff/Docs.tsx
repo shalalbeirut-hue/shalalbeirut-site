@@ -27,8 +27,8 @@ export const linesFromDoc = (doc: any): Line[] =>
   (doc?.items ?? []).map((i: any) => ({ description: i.description, qty: i.qty, unit_kd: (i.unit_fils / 1000).toFixed(3), kind: i.kind, price_item_id: i.price_item_id ?? undefined }));
 
 /** Tap-to-add picker for labour and spare parts, with quantity steppers and a live total. */
-export function ItemsEditor({ lines, setLines, discount, setDiscount, serviceId }: {
-  lines: Line[]; setLines: (l: Line[]) => void; discount: string; setDiscount: (v: string) => void; serviceId?: number | null;
+export function ItemsEditor({ lines, setLines, discount, setDiscount, serviceIds = [] }: {
+  lines: Line[]; setLines: (l: Line[]) => void; discount: string; setDiscount: (v: string) => void; serviceIds?: number[];
 }) {
   const services = useLoad(() => api('/services'));
   const [tab, setTab] = useState<'labour' | 'part'>('labour');
@@ -36,7 +36,7 @@ export function ItemsEditor({ lines, setLines, discount, setDiscount, serviceId 
   const [showDiscount, setShowDiscount] = useState(!!Number(discount));
 
   const all = (services.data?.services ?? []).filter((s: any) => s.active)
-    .flatMap((s: any) => s.items.filter((i: any) => i.active).map((i: any) => ({ ...i, mine: s.id === serviceId, svc: s.name_ar })));
+    .flatMap((s: any) => s.items.filter((i: any) => i.active).map((i: any) => ({ ...i, mine: serviceIds.includes(s.id), svc: s.name_ar })));
   const list = all.filter((i: any) => i.kind === tab && (!q || i.name_ar.includes(q.trim())));
   const mine = list.filter((i: any) => i.mine);
   const others = list.filter((i: any) => !i.mine);
@@ -119,7 +119,7 @@ const validLines = (lines: Line[]) => {
 const toBody = (lines: Line[]) => lines.map((l) => ({ description: l.description.trim(), qty: l.qty, unit_kd: l.unit_kd, kind: l.kind, price_item_id: l.price_item_id }));
 
 /** Build or edit the quote. After saving, offer signing now or sending the link. */
-export function QuoteModal({ order, doc, serviceId, onClose, onSaved }: any) {
+export function QuoteModal({ order, doc, serviceIds, onClose, onSaved }: any) {
   const [lines, setLines] = useState<Line[]>(linesFromDoc(doc));
   const [discount, setDiscount] = useState(doc?.discount_fils ? (doc.discount_fils / 1000).toFixed(3) : '');
   const [notes, setNotes] = useState(doc?.notes ?? '');
@@ -133,7 +133,7 @@ export function QuoteModal({ order, doc, serviceId, onClose, onSaved }: any) {
     <Modal title={doc ? 'تعديل عرض السعر' : 'عرض سعر جديد'} onClose={onClose}>
       {doc?.doc_status === 'work_order' && <div class="note">العميل وقّع على هالعرض. أي تعديل يرجعه عرض سعر ويبيله توقيع جديد.</div>}
       <ErrorBox error={error} />
-      <ItemsEditor lines={lines} setLines={setLines} discount={discount} setDiscount={setDiscount} serviceId={serviceId} />
+      <ItemsEditor lines={lines} setLines={setLines} discount={discount} setDiscount={setDiscount} serviceIds={serviceIds} />
       <Field label="ملاحظات للعميل (اختياري)"><input id="q-notes" class="input" placeholder="مثلاً: السعر يشمل التركيب والتجربة" value={notes} onInput={(e) => setNotes(e.currentTarget.value)} /></Field>
       <Btn variant="primary big" busy={busy} icon="check" onClick={save}>احفظ عرض السعر</Btn>
     </Modal>
@@ -167,7 +167,7 @@ export function SignModal({ order, doc, customerName, onClose, onDone }: any) {
 }
 
 /** Job done: warranty and payment. Items come from the work order; they can still be adjusted. */
-export function FinishModal({ order, doc, serviceId, defaultMonths, onClose, onDone }: any) {
+export function FinishModal({ order, doc, serviceIds, defaultMonths, onClose, onDone }: any) {
   const [editItems, setEditItems] = useState(!doc);
   const [lines, setLines] = useState<Line[]>(linesFromDoc(doc));
   const [discount, setDiscount] = useState(doc?.discount_fils ? (doc.discount_fils / 1000).toFixed(3) : '');
@@ -201,7 +201,7 @@ export function FinishModal({ order, doc, serviceId, defaultMonths, onClose, onD
           {doc.doc_status === 'quote' && <p class="small note">العميل باقي ما وقّع على العرض.</p>}
         </div>
       )}
-      {editItems && <ItemsEditor lines={lines} setLines={setLines} discount={discount} setDiscount={setDiscount} serviceId={serviceId} />}
+      {editItems && <ItemsEditor lines={lines} setLines={setLines} discount={discount} setDiscount={setDiscount} serviceIds={serviceIds} />}
       <Field label="مدة الكفالة">
         <div class="tabs" style="margin:0">
           {['0', '1', '3', '6', '12', '24'].map((m) => <button type="button" class={months === m ? 'on' : ''} onClick={() => setMonths(m)}>{m === '0' ? 'بدون' : `${m} شهر`}</button>)}
@@ -220,13 +220,21 @@ export function FinishModal({ order, doc, serviceId, defaultMonths, onClose, onD
 }
 
 /** The document card on the order page, with the next action for its status. */
-export function DocCard({ order, doc, customer, service, canEdit, onChanged, onPayment }: any) {
+export function DocCard({ order, doc, customer, serviceIds, canEdit, onChanged, onPayment }: any) {
   const [modal, setModal] = useState<null | 'quote' | 'sign'>(null);
   const act = useAction();
   const st = doc?.doc_status;
   const sendQuote = () => act.run(async () => { const r = await api(`/orders/${order.id}/quote/send`, { method: 'POST' }); openWa(r.wa); });
   const sendInvoice = () => act.run(async () => { const r = await api(`/invoices/${doc.id}/send`, { method: 'POST' }); openWa(r.wa); onChanged(); });
   const editable = canEdit && (!st || st === 'quote' || st === 'work_order') && !['closed', 'cancelled'].includes(order.status);
+  const [shareMsg, setShareMsg] = useState<string | null>(null);
+  const shareFile = (format: 'pdf' | 'png') => act.run(async () => {
+    setShareMsg(null);
+    const { shareDoc } = await import('../doc/export');
+    const how = await shareDoc(doc.public_token, format, { phone: customer?.phone, text: `هلا ${customer?.name ?? ''}، هذا ${DOC[st]?.label ?? 'المستند'} رقم ${doc.number} من شلال بيروت.` });
+    if (how === 'downloaded') setShareMsg('نزل الملف على جهازك وانفتحت محادثة العميل في الواتساب. أرفق الملف من زر المرفقات 📎.');
+    if (st === 'invoice' || st === 'paid') onChanged();
+  });
 
   return (
     <div class="card stack">
@@ -267,9 +275,15 @@ export function DocCard({ order, doc, customer, service, canEdit, onChanged, onP
             {st === 'invoice' && onPayment && <Btn icon="check" onClick={onPayment}>سجّل الدفع (مسددة)</Btn>}
             <a class="btn sm" href={`/i/${doc.public_token}`} target="_blank" rel="noopener"><Icon name="receipt" />شكله عند العميل</a>
           </div>
+          <div class="row">
+            <span class="small muted">أرسله ملف:</span>
+            <Btn variant="sm water" icon="wa" busy={act.busy} onClick={() => shareFile('pdf')}>PDF</Btn>
+            <Btn variant="sm water" icon="camera" busy={act.busy} onClick={() => shareFile('png')}>صورة</Btn>
+          </div>
+          {shareMsg && <div class="note small">{shareMsg}</div>}
         </>
       )}
-      {modal === 'quote' && <QuoteModal order={order} doc={doc} serviceId={service?.id} onClose={() => setModal(null)} onSaved={() => { setModal(null); onChanged(); }} />}
+      {modal === 'quote' && <QuoteModal order={order} doc={doc} serviceIds={serviceIds} onClose={() => setModal(null)} onSaved={() => { setModal(null); onChanged(); }} />}
       {modal === 'sign' && <SignModal order={order} doc={doc} customerName={customer?.name} onClose={() => setModal(null)} onDone={() => { setModal(null); onChanged(); }} />}
     </div>
   );

@@ -1,5 +1,5 @@
 // Creates a staff account directly in the database (use it for the first admin).
-// The password is asked for on the terminal and never written to disk.
+// The password is asked for on the terminal, hidden while typing, and never written to disk (only its hash is).
 //
 //   node scripts/create-user.mjs --env dev|preview|production --name "Name" --phone 5xxxxxxx --role admin
 //
@@ -23,8 +23,10 @@ if (!name || !/^965\d{8}$/.test(phone) || !['admin', 'manager', 'cs', 'tech'].in
 
 async function ask(q) {
   if (args.password) return args.password; // for automated local test setups only
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
-  return new Promise((res) => rl.question(q, (a) => { rl.close(); res(a); }));
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
+  // Hide what is typed: echo * instead of the characters.
+  rl._writeToOutput = (s) => { rl.output.write(s.includes(q) ? q : s.replace(/[^\r\n]/g, '*')); };
+  return new Promise((res) => rl.question(q, (a) => { rl.close(); process.stdout.write('\n'); res(a); }));
 }
 
 const password = await ask('Temporary password (8+ characters, they will change it on first login): ');

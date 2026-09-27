@@ -20,9 +20,11 @@ export async function runDaily(env: Env) {
   // Tank cleaning is due every 6 months: remind once, 6 months after the last one.
   const sixMonthsAgo = new Date(now); sixMonthsAgo.setUTCMonth(sixMonthsAgo.getUTCMonth() - 6);
   const tanks = await env.DB.prepare(
-    `SELECT o.id, o.code, c.name FROM orders o JOIN customers c ON c.id = o.customer_id JOIN services s ON s.id = o.service_id
-     WHERE s.slug = 'tanks-pumps' AND o.status IN ('done','closed') AND o.finished_at <= ?1
-       AND NOT EXISTS (SELECT 1 FROM orders o2 WHERE o2.customer_id = o.customer_id AND o2.service_id = o.service_id AND o2.created_at > o.finished_at)
+    `SELECT o.id, o.code, c.name FROM orders o JOIN customers c ON c.id = o.customer_id
+     WHERE o.status IN ('done','closed') AND o.finished_at <= ?1
+       AND EXISTS (SELECT 1 FROM order_services os JOIN services s ON s.id = os.service_id WHERE os.order_id = o.id AND s.slug = 'tanks-pumps')
+       AND NOT EXISTS (SELECT 1 FROM orders o2 JOIN order_services os2 ON os2.order_id = o2.id JOIN services s2 ON s2.id = os2.service_id
+                       WHERE o2.customer_id = o.customer_id AND s2.slug = 'tanks-pumps' AND o2.created_at > o.finished_at)
        AND NOT EXISTS (SELECT 1 FROM activity_log a WHERE a.entity = 'order' AND a.entity_id = o.id AND a.action = 'tank_reminder')`,
   ).bind(sixMonthsAgo.toISOString()).all<any>();
   for (const t of tanks.results) {

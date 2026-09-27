@@ -3,6 +3,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { api, fmtDate, fmtDateTime, kd, PAY, PAY_METHOD, waHref } from '../lib';
 import { useLoad, Loading, ErrorBox, Mark, Icon, Field, Btn, Modal, useAction, SignaturePad } from '../ui';
 import { SITE } from '../../config';
+import { DocSheet, DOC_TITLE } from '../doc/DocSheet';
 
 const tokenFrom = (prefix: string) => location.pathname.replace(prefix, '').replace(/\/+$/, '').split('/')[0];
 const Brand = () => <a class="logo-head" href="/"><Mark />شلال بيروت</a>;
@@ -13,79 +14,44 @@ const CUSTOMER_STATUS: Record<string, string> = {
   done: 'خلص الشغل', closed: 'خلص الشغل', reopened: 'نتابع طلبك', cancelled: 'ملغي',
 };
 
-// ------------------------------------------------------------ Invoice
-
-const DOC_TITLE: Record<string, string> = { quote: 'عرض سعر', work_order: 'أمر عمل', invoice: 'فاتورة', paid: 'فاتورة مسددة' };
+// ------------------------------------------------------------ Document (quote / work order / invoice)
 
 export function InvoicePage() {
   const token = tokenFrom('/i/');
   const { data, error, loading, reload } = useLoad(() => api(`/public/invoice/${token}`));
+  const photos = useLoad(() => api(`/public/doc/${token}/photos`).catch(() => ({ photos: [] })));
+  const act = useAction();
   if (loading) return <div class="center-page"><Loading /></div>;
   if (error) return <div class="center-page"><div class="box"><Brand /><ErrorBox error={error} /></div></div>;
   const i = data.invoice;
-  const active = i.ends_at && new Date(i.ends_at) > new Date();
   const st: string = i.doc_status;
-  const isInvoice = st === 'invoice' || st === 'paid';
+  const save = (format: 'pdf' | 'png') => act.run(async () => { const { downloadDoc } = await import('../doc/export'); await downloadDoc(token, format); });
+  const list = photos.data?.photos ?? [];
   return (
-    <div class="center-page">
-      <div class="invoice stack">
-        <div class="inv-head">
-          <div class="stack" style="gap:4px">
-            <div class="logo-head" style="justify-content:flex-start"><Mark />شلال بيروت</div>
-            <span class="small muted">{SITE.legalAr}</span>
-            <span class="small muted">{SITE.shopAr}{SITE.phone ? ` · ${SITE.phone}` : ''}</span>
-          </div>
-          <div class="stack" style="gap:4px;text-align:end">
-            <h1>{DOC_TITLE[st] ?? 'فاتورة'}</h1>
-            <span class="num">{i.number}</span>
-            <span class="small muted">{fmtDate(isInvoice ? i.invoiced_at ?? i.issued_at : i.issued_at)}</span>
-            {st === 'paid' && <span class="stamp-paid">مسددة</span>}
-          </div>
-        </div>
-        <dl class="kv">
-          <dt>العميل</dt><dd>{i.customer_name}</dd>
-          <dt>الطلب</dt><dd class="num">{i.code}</dd>
-          {i.service && <><dt>الخدمة</dt><dd>{i.service}</dd></>}
-          {i.area && <><dt>المنطقة</dt><dd>{i.governorate} - {i.area}</dd></>}
-          {i.tech_name && <><dt>الفني</dt><dd>{i.tech_name}</dd></>}
-        </dl>
-        <div class="table-wrap"><table class="inv-items">
-          <thead><tr><th>البند</th><th>الكمية</th><th>السعر</th><th>المجموع</th></tr></thead>
-          <tbody>{i.items.map((x: any) => <tr><td>{x.description}</td><td class="num">{x.qty}</td><td class="num">{kd(x.unit_fils)}</td><td class="num">{kd(x.total_fils)}</td></tr>)}</tbody>
-        </table></div>
-        <div class="totals">
-          <span>المجموع</span><span class="num">{kd(i.subtotal_fils)}</span>
-          {i.discount_fils > 0 && <><span>خصم</span><span class="num">- {kd(i.discount_fils)}</span></>}
-          <span class="grand">الإجمالي</span><span class="grand num">{kd(i.total_fils)}</span>
-          {isInvoice && <><span class="muted">الدفع</span><span>{PAY[i.payment_status]}{i.payment_method ? ` (${PAY_METHOD[i.payment_method]})` : ''}</span></>}
-        </div>
-        {i.months ? (
-          <div class="warranty-box">
-            <div class="seal">كفالة<br />{i.months} شهر</div>
-            <div class="stack" style="gap:4px">
-              <b>{active ? 'الكفالة سارية' : 'الكفالة انتهت'}</b>
-              <span class="small">من {fmtDate(i.starts_at)} لين {fmtDate(i.ends_at)}</span>
-              {i.covers && <span class="small muted">تشمل: {i.covers}</span>}
-              <span class="small muted">إذا صار أي خلل في الشغل خلال الكفالة، طرّش لنا رقم الطلب على الواتساب ونجيك ببلاش.</span>
-            </div>
-          </div>
-        ) : null}
-        {i.notes && <p class="small muted">{i.notes}</p>}
-        {i.signed_at && (
-          <div class="stack" style="gap:4px">
-            <span class="small muted">موافقة العميل على العرض:</span>
-            <img class="sig-img" src={i.signature} alt="توقيع العميل" />
-            <span class="small muted">{i.signed_name ?? ''} · {fmtDate(i.signed_at)}</span>
-          </div>
-        )}
-        {st === 'quote' && <ApproveQuote token={token} name={i.customer_name} onDone={reload} />}
-        {st === 'work_order' && <div class="ok">وافقت على العرض ووقّعت. الفني بيبدأ الشغل، وبتوصلك الفاتورة بعد ما يخلص.</div>}
-        <p class="small muted" style="text-align:center">{st === 'quote' ? 'عرض السعر صالح 7 أيام.' : 'شكراً لثقتك.'} في الموعد.. وبالضمان</p>
-        <div class="row no-print" style="justify-content:center">
-          <button class="btn" onClick={() => window.print()}><Icon name="receipt" />اطبع أو احفظ PDF</button>
-          <a class="btn" href="/my/"><Icon name="user" />حسابي</a>
-        </div>
+    <div class="center-page" style="gap:14px">
+      <DocSheet doc={i} />
+      <div class="row no-print" style="justify-content:center">
+        <Btn icon="receipt" busy={act.busy} onClick={() => save('pdf')}>حمّل PDF</Btn>
+        <Btn icon="camera" busy={act.busy} onClick={() => save('png')}>حمّل صورة</Btn>
+        <button class="btn" onClick={() => window.print()}>اطبع</button>
+        <a class="btn" href="/my/"><Icon name="user" />حسابي</a>
       </div>
+      <ErrorBox error={act.error} />
+      {st === 'quote' && <div style="max-width:794px;width:100%"><ApproveQuote token={token} name={i.customer_name} onDone={reload} /></div>}
+      {st === 'work_order' && <div class="ok no-print" style="max-width:794px;width:100%">وافقت على العرض ووقّعت. الفني بيبدأ الشغل، وبتوصلك الفاتورة بعد ما يخلص.</div>}
+      {list.length > 0 && (
+        <div class="card stack no-print" style="max-width:794px;width:100%">
+          <h2>صور الشغل</h2>
+          {(['before', 'after'] as const).map((k) => list.some((p: any) => p.kind === k) && (
+            <div class="stack" style="gap:6px">
+              <h3>{k === 'before' ? 'قبل' : 'بعد'}</h3>
+              <div class="photos">{list.filter((p: any) => p.kind === k).map((p: any) => (
+                <div class="ph"><a href={`/api/public/doc/${token}/photo/${p.id}`} target="_blank" rel="noopener"><img src={`/api/public/doc/${token}/photo/${p.id}`} alt={k === 'before' ? 'قبل' : 'بعد'} loading="lazy" /></a></div>
+              ))}</div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -96,7 +62,7 @@ function ApproveQuote({ token, name, onDone }: { token: string; name: string; on
   const [signer, setSigner] = useState(name ?? '');
   const [agree, setAgree] = useState(false);
   const act = useAction();
-  if (!open) return <Btn variant="primary big no-print" icon="check" onClick={() => setOpen(true)}>أوافق على العرض وأوقّع</Btn>;
+  if (!open) return <Btn variant="primary big block no-print" icon="check" onClick={() => setOpen(true)}>أوافق على العرض وأوقّع</Btn>;
   const submit = () => {
     if (!agree) return act.setError('علّم على الموافقة أول');
     if (!sig) return act.setError('وقّع في المربع');

@@ -101,15 +101,15 @@ export default function App() {
         <header class="topbar">
           <a class="brand" href="/app/"><Mark pipe="#fff" water="#62C0EA" />شلال بيروت</a>
           <span class="spacer" />
+          <span class="whoami"><b>{user.name}</b><span>{ROLE[user.role]}</span></span>
           <a class="icon-btn" href="/app/notifications" aria-label="التنبيهات" style="color:#fff">
             <Icon name="bell" />{counts.unread > 0 && <span class="dot">{counts.unread > 99 ? '99+' : counts.unread}</span>}
           </a>
-          <a class="icon-btn" href="/app/password" aria-label="كلمة السر" title={`${user.name} · ${ROLE[user.role]}`} style="color:#fff"><Icon name="key" /></a>
+          <a class="icon-btn" href="/app/password" aria-label="تغيير كلمة السر" title="تغيير كلمة السر" style="color:#fff"><Icon name="key" /></a>
           <button class="icon-btn" onClick={logout} aria-label="تسجيل خروج"><Icon name="logout" /></button>
         </header>
         <div class="layout">
           <nav class="sidenav" aria-label="القائمة">
-            <div class="small muted" style="padding:4px 12px 10px">{user.name} · {ROLE[user.role]}</div>
             {nav.map((n) => (
               <a href={BASE + (n.path === '/' ? '/' : n.path + '/')} class={isOn(n.path) ? 'on' : ''}>
                 <Icon name={n.icon} />{n.label}{badge(n) > 0 && <span class="badge t-warn">{badge(n)}</span>}

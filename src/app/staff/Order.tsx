@@ -4,7 +4,7 @@ import {
   api, fmtDateTime, fmtDate, kd, phoneDisplay, telHref, waHref, SOURCE, PAY, PAY_METHOD,
   kuwaitLocalToIso, isoToKuwaitLocal, compressImage, getLocation, openWa,
 } from '../lib';
-import { useLoad, Loading, ErrorBox, StatusBadge, Stars, Icon, Field, Btn, Modal, useAction } from '../ui';
+import { useLoad, Loading, ErrorBox, StatusBadge, Stars, Icon, Field, Btn, Modal, useAction, ServiceChips } from '../ui';
 import { useApp } from './App';
 import { DocCard, FinishModal } from './Docs';
 
@@ -17,12 +17,12 @@ const ACTION_AR: Record<string, string> = {
 export function OrderView({ id }: { id: number }) {
   const { user } = useApp();
   const { data, error, loading, reload } = useLoad(() => api(`/orders/${id}`), [id]);
-  const [modal, setModal] = useState<null | 'assign' | 'finish' | 'cancel' | 'reopen' | 'payment'>(null);
+  const [modal, setModal] = useState<null | 'assign' | 'finish' | 'cancel' | 'reopen' | 'payment' | 'services'>(null);
   const [sent, setSent] = useState<{ wa: string; number?: string } | null>(null);
   const act = useAction();
   if (loading && !data) return <Loading />;
   if (error) return <ErrorBox error={error} />;
-  const { order: o, customer: c, address: a, service, tech, photos, invoice, warranty, survey, followups, activity } = data;
+  const { order: o, customer: c, address: a, service, services, tech, photos, invoice, warranty, survey, followups, activity } = data;
   const office = user.role !== 'tech';
   const manager = user.role === 'admin' || user.role === 'manager';
   const active = !['done', 'closed', 'cancelled'].includes(o.status);
@@ -85,7 +85,7 @@ export function OrderView({ id }: { id: number }) {
         <div class="card stack">
           <h2>الطلب</h2>
           <dl class="kv">
-            <dt>الخدمة</dt><dd>{service?.name_ar ?? '—'}</dd>
+            <dt>{services.length > 1 ? 'الخدمات' : 'الخدمة'}</dt><dd>{services.length ? services.map((s: any) => s.name_ar).join('، ') : '—'}</dd>
             <dt>المصدر</dt><dd>{SOURCE[o.source] ?? o.source}</dd>
             {o.preferred_time && <><dt>يناسبه</dt><dd>{o.preferred_time}</dd></>}
             <dt>الموعد</dt><dd>{fmtDateTime(o.scheduled_at)}</dd>
@@ -97,6 +97,7 @@ export function OrderView({ id }: { id: number }) {
           {o.tech_notes && <p class="note small" style="white-space:pre-line">ملاحظات الفني: {o.tech_notes}</p>}
           {office && (
             <div class="row">
+              {active && <Btn variant="sm" icon="tag" onClick={() => setModal('services')}>عدّل الخدمات</Btn>}
               {active && <Btn variant="sm" icon="users" onClick={() => setModal('assign')}>{o.tech_id ? 'غيّر الفني أو الموعد' : 'اسند لفني'}</Btn>}
               {active && <Btn variant="sm danger" onClick={() => setModal('cancel')}>إلغاء الطلب</Btn>}
               {['done', 'closed'].includes(o.status) && <Btn variant="sm" icon="refresh" onClick={() => setModal('reopen')}>افتح الطلب من جديد</Btn>}
@@ -107,7 +108,7 @@ export function OrderView({ id }: { id: number }) {
 
       <Photos orderId={id} photos={photos} canEdit={office || active} reload={reload} />
 
-      <DocCard order={o} doc={invoice} customer={c} service={service} canEdit={user.role !== 'tech' || o.tech_id === user.id} onChanged={reload} onPayment={office ? () => setModal('payment') : undefined} />
+      <DocCard order={o} doc={invoice} customer={c} serviceIds={services.map((s: any) => s.id)} canEdit={user.role !== 'tech' || o.tech_id === user.id} onChanged={reload} onPayment={office ? () => setModal('payment') : undefined} />
 
       {warranty && (
         <div class="card row">
@@ -157,7 +158,8 @@ export function OrderView({ id }: { id: number }) {
       )}
 
       {modal === 'assign' && <AssignModal order={o} onClose={() => setModal(null)} onDone={() => { setModal(null); reload(); }} />}
-      {modal === 'finish' && <FinishModal order={o} doc={invoice} serviceId={o.service_id} defaultMonths={service?.default_warranty_months} onClose={() => setModal(null)} onDone={(r: { wa: string; number: string }) => { setModal(null); setSent(r); reload(); }} />}
+      {modal === 'services' && <ServicesModal order={o} current={services.map((s: any) => s.id)} onClose={() => setModal(null)} onDone={() => { setModal(null); reload(); }} />}
+      {modal === 'finish' && <FinishModal order={o} doc={invoice} serviceIds={services.map((s: any) => s.id)} defaultMonths={services.reduce((m: number | null, s: any) => (s.default_warranty_months != null && (m == null || s.default_warranty_months > m) ? s.default_warranty_months : m), null)} onClose={() => setModal(null)} onDone={(r: { wa: string; number: string }) => { setModal(null); setSent(r); reload(); }} />}
       {modal === 'payment' && invoice && <PaymentModal invoice={invoice} onClose={() => setModal(null)} onDone={() => { setModal(null); reload(); }} />}
       {(modal === 'cancel' || modal === 'reopen') && <ReasonModal kind={modal} orderId={id} onClose={() => setModal(null)} onDone={() => { setModal(null); reload(); }} />}
     </div>
@@ -199,6 +201,19 @@ function Photos({ orderId, photos, canEdit, reload }: { orderId: number; photos:
       <ErrorBox error={error} />
       <div class="grid2">{section('before', 'قبل')}{section('after', 'بعد')}</div>
     </div>
+  );
+}
+
+function ServicesModal({ order, current, onClose, onDone }: any) {
+  const all = useLoad(() => api('/services'));
+  const [ids, setIds] = useState<number[]>(current);
+  const { busy, error, run } = useAction();
+  return (
+    <Modal title="خدمات الطلب" onClose={onClose}>
+      <ErrorBox error={error} />
+      {all.loading ? <Loading /> : <ServiceChips services={all.data.services} value={ids} onChange={setIds} />}
+      <Btn variant="primary" busy={busy} disabled={!ids.length} onClick={() => run(async () => { await api(`/orders/${order.id}`, { method: 'PATCH', body: { service_ids: ids } }); onDone(); })}>حفظ</Btn>
+    </Modal>
   );
 }
 

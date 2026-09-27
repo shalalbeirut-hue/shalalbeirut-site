@@ -32,5 +32,5 @@ for (const [lang, file] of [['ar', 'green/horizontal-ar-color'], ['en', 'green/h
     .png().toFile(path.join(PUBLIC, `og-${lang}.png`));
 }
 
-await fs.writeFile(path.join(PUBLIC, 'robots.txt'), 'User-agent: *\nAllow: /\n\nSitemap: https://shalalbeirut.com/sitemap-index.xml\n');
+// robots.txt is maintained by hand in public/ (it also blocks the private app paths).
 console.log('Web assets written to public/');

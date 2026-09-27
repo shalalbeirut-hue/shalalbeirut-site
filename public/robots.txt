@@ -1,4 +1,9 @@
 User-agent: *
 Allow: /
+Disallow: /app/
+Disallow: /my/
+Disallow: /i/
+Disallow: /r/
+Disallow: /api/
 
 Sitemap: https://shalalbeirut.com/sitemap-index.xml

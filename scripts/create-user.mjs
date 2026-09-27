@@ -6,6 +6,9 @@
 import { webcrypto as crypto } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import readline from 'node:readline';
+import { writeFileSync, rmSync, mkdtempSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1]]] : acc), []));
 const env = args.env || 'dev';
@@ -40,5 +43,13 @@ const dbArgs = env === 'production'
   : env === 'preview'
     ? ['wrangler', 'd1', 'execute', 'shalalbeirut-ops-preview', '--remote', '--env', 'preview']
     : ['wrangler', 'd1', 'execute', 'shalalbeirut-ops-dev', '--local', '--env', 'dev'];
-execFileSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', [...dbArgs, '--command', sql], { stdio: 'inherit', shell: process.platform === 'win32' });
+// Pass the SQL as a file: shell quoting on Windows would split a --command argument.
+const dir = mkdtempSync(join(tmpdir(), 'sb-user-'));
+const file = join(dir, 'user.sql');
+writeFileSync(file, sql);
+try {
+  execFileSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', [...dbArgs, '--file', file, '--yes'], { stdio: 'inherit', shell: process.platform === 'win32' });
+} finally {
+  rmSync(dir, { recursive: true, force: true });
+}
 console.log(`Created ${role} ${name} (${phone}) on ${env}.`);

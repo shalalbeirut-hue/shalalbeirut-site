@@ -75,19 +75,44 @@ r = await tech(`/orders/${orderId}/photos?kind=after`, { raw: jpeg, type: 'image
 const photoId = r.data.id;
 check('upload after photo', r.status === 200);
 
-r = await tech(`/orders/${orderId}/finish`, { body: {
+// Quote -> customer signs from the WhatsApp link -> work order
+r = await tech(`/orders/${orderId}/quote`, { body: {
   items: [{ description: 'تبديل هيتر', qty: 1, unit_kd: '8', kind: 'labour' }, { description: 'هيتر 3000 واط', qty: 1, unit_kd: '6.500', kind: 'part' }],
-  discount_kd: '0.500', warranty_months: 6, warranty_covers: 'الهيتر والتوصيلات', payment_status: 'paid', payment_method: 'knet',
+  discount_kd: '0.500',
 } });
-check('tech finishes -> invoice + WhatsApp', r.status === 200 && /^INV-\d{4}-\d{5}$/.test(r.data.number), r.data.number);
+check('tech saves quote', r.status === 200 && r.data.doc_status === 'quote' && /^Q-\d{4}-\d{5}$/.test(r.data.number), r.data.number ?? r.data.error);
+r = await tech(`/orders/${orderId}/quote/send`, { method: 'POST' });
+const quoteToken = tokenFrom(r.data.wa ?? '', '/i/');
+check('quote WhatsApp link', !!quoteToken);
+r = await anon(`/public/invoice/${quoteToken}`);
+check('customer sees quote', r.data.invoice?.doc_status === 'quote' && r.data.invoice?.total_fils === 14000);
+r = await anon(`/public/doc/${quoteToken}/sign`, { body: { signature: 'not-an-image', name: 'أبو محمد' } });
+check('bad signature rejected', r.status === 400);
+const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
+r = await anon(`/public/doc/${quoteToken}/sign`, { body: { signature: png, name: 'أبو محمد' } });
+check('customer signs remotely', r.status === 200);
+r = await anon(`/public/invoice/${quoteToken}`);
+check('quote becomes work order with signature', r.data.invoice?.doc_status === 'work_order' && r.data.invoice?.signature === png);
+r = await anon(`/public/doc/${quoteToken}/sign`, { body: { signature: png } });
+check('cannot sign twice', r.status === 400);
+
+// Finish from the signed work order (no items needed)
+r = await tech(`/orders/${orderId}/finish`, { body: { warranty_months: 6, warranty_covers: 'الهيتر والتوصيلات', payment_status: 'unpaid' } });
+check('tech finishes -> invoice + WhatsApp', r.status === 200 && /^INV-\d{4}-\d{5}$/.test(r.data.number), r.data.number ?? r.data.error);
 const wa = r.data.wa ?? '';
 const invToken = tokenFrom(wa, '/i/');
 const surveyToken = tokenFrom(wa, '/r/');
 const linkToken = tokenFrom(wa, '/my/login/');
 check('WhatsApp message has invoice, survey and account links', !!(invToken && surveyToken && linkToken));
+check('same document keeps its link', invToken === quoteToken);
+const invId = r.data.invoice_id;
+r = await anon(`/public/invoice/${invToken}`);
+check('document is now an unpaid invoice', r.data.invoice?.doc_status === 'invoice');
+r = await cs(`/invoices/${invId}/payment`, { method: 'PATCH', body: { payment_status: 'paid', payment_method: 'knet' } });
+check('cs records payment', r.status === 200);
 
 r = await anon(`/public/invoice/${invToken}`);
-check('public invoice total 14.000 KD', r.data.invoice?.total_fils === 14000, String(r.data.invoice?.total_fils));
+check('paid invoice, total 14.000 KD', r.data.invoice?.doc_status === 'paid' && r.data.invoice?.total_fils === 14000, String(r.data.invoice?.doc_status));
 check('invoice shows 6-month warranty', r.data.invoice?.months === 6);
 
 r = await anon(`/public/survey/${surveyToken}`, { body: { overall: 5, tech: 5, punctuality: 4, comment: 'شغل نظيف والفني محترم', consent: true } });
@@ -115,7 +140,7 @@ check('customer account needs login', r.status === 401);
 r = await cust('/my/login', { body: { token: linkToken } });
 check('customer logs in from WhatsApp link', r.status === 200);
 r = await cust('/my/summary');
-check('customer sees invoice and warranty', r.data.invoices?.length === 1 && r.data.warranties?.[0]?.months === 6);
+check('customer sees paid invoice and warranty', r.data.invoices?.[0]?.doc_status === 'paid' && r.data.warranties?.[0]?.months === 6);
 const photoRes = await fetch(`${BASE}/api/photos/${photoId}`);
 check('photo blocked without login', photoRes.status === 403);
 

@@ -3,6 +3,7 @@ import { useState } from 'preact/hooks';
 import { api, fmtDateTime, fmtDate, kd, phoneDisplay, telHref, waHref, PAY, openWa, GOVERNORATES } from '../lib';
 import { useLoad, Loading, ErrorBox, StatusBadge, Stars, Icon, Field, Btn, Modal, useAction } from '../ui';
 import { useApp } from './App';
+import { DOC } from './Docs';
 
 export function Followups() {
   const { refreshCounts } = useApp();
@@ -112,28 +113,20 @@ export function Surveys() {
 }
 
 export function Invoices() {
-  const [status, setStatus] = useState('');
-  const { data, error, loading } = useLoad(() => api(`/invoices${status ? '?status=' + status : ''}`), [status]);
-  const act = useAction();
+  const [doc, setDoc] = useState('');
+  const { data, error, loading } = useLoad(() => api(`/invoices${doc ? '?doc=' + doc : ''}`), [doc]);
   return (
     <div>
-      <div class="page-head"><h1>الفواتير</h1></div>
-      <div class="tabs">{[['', 'الكل'], ['unpaid', 'غير مدفوعة'], ['partial', 'جزئية'], ['paid', 'مدفوعة']].map(([k, l]) => <button class={status === k ? 'on' : ''} onClick={() => setStatus(k)}>{l}</button>)}</div>
-      <ErrorBox error={error || act.error} />
-      {loading && !data ? <Loading /> : data.invoices.length === 0 ? <div class="empty">ما في فواتير.</div> : (
-        <div class="table-wrap"><table>
-          <thead><tr><th>الرقم</th><th>العميل</th><th>التاريخ</th><th>المبلغ</th><th>الحالة</th><th></th></tr></thead>
-          <tbody>{data.invoices.map((i: any) => (
-            <tr>
-              <td><a class="num" href={`/app/orders/${i.order_id}/`}>{i.number}</a></td>
-              <td>{i.customer_name}</td>
-              <td>{fmtDate(i.issued_at)}</td>
-              <td class="num">{kd(i.total_fils)}</td>
-              <td><span class={`badge ${i.payment_status === 'paid' ? 't-good' : i.payment_status === 'partial' ? 't-warn' : 't-bad'}`}>{PAY[i.payment_status]}</span>{!i.sent_at && <span class="badge t-muted" style="margin-inline-start:4px">ما انرسلت</span>}</td>
-              <td><Btn variant="sm" icon="wa" busy={act.busy} onClick={() => act.run(async () => { const r = await api(`/invoices/${i.id}/send`, { method: 'POST' }); openWa(r.wa); })}>إرسال</Btn></td>
-            </tr>
-          ))}</tbody>
-        </table></div>
+      <div class="page-head"><h1>العروض والفواتير</h1></div>
+      <div class="tabs">{[['', 'الكل'], ['quote', 'عروض أسعار'], ['work_order', 'أوامر عمل'], ['invoice', 'فواتير غير مسددة'], ['paid', 'مسددة']].map(([k, l]) => <button class={doc === k ? 'on' : ''} onClick={() => setDoc(k)}>{l}</button>)}</div>
+      <ErrorBox error={error} />
+      {loading && !data ? <Loading /> : data.invoices.length === 0 ? <div class="empty">ما في شي هني.</div> : (
+        <div class="list">{data.invoices.map((i: any) => (
+          <a class="item" href={`/app/orders/${i.order_id}/`}>
+            <div class="top"><span class="title">{i.customer_name} <span class="num small muted">{i.number}</span></span><span class={`badge t-${DOC[i.doc_status]?.tone ?? 'muted'}`}>{DOC[i.doc_status]?.label ?? i.doc_status}</span></div>
+            <div class="row between small"><span class="muted">طلب <span class="num">{i.code}</span> · {fmtDate(i.issued_at)}{i.doc_status === 'invoice' && !i.sent_at ? ' · ما انرسلت' : ''}</span><b class="num">{kd(i.total_fils)}</b></div>
+          </a>
+        ))}</div>
       )}
     </div>
   );
@@ -221,9 +214,9 @@ export function CustomerView({ id }: { id: number }) {
       </div>
       <div class="grid2">
         <div class="card stack">
-          <h2>الفواتير</h2>
+          <h2>العروض والفواتير</h2>
           {invoices.length === 0 ? <p class="muted">ما في فواتير.</p> : invoices.map((i: any) => (
-            <div class="row between small"><a class="num" href={`/app/orders/${i.order_id}/`}>{i.number}</a><span class="num">{kd(i.total_fils)}</span><span class={`badge ${i.payment_status === 'paid' ? 't-good' : 't-bad'}`}>{PAY[i.payment_status]}</span></div>
+            <div class="row between small"><a class="num" href={`/app/orders/${i.order_id}/`}>{i.number}</a><span class="num">{kd(i.total_fils)}</span><span class={`badge t-${DOC[i.doc_status]?.tone ?? 'muted'}`}>{DOC[i.doc_status]?.label ?? PAY[i.payment_status]}</span></div>
           ))}
         </div>
         <div class="card stack">

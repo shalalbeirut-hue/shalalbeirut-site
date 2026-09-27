@@ -1,7 +1,7 @@
 // Customer-facing pages: invoice (/i/:token), survey (/r/:token) and account (/my/).
 import { useEffect, useState } from 'preact/hooks';
 import { api, fmtDate, fmtDateTime, kd, PAY, PAY_METHOD, waHref } from '../lib';
-import { useLoad, Loading, ErrorBox, Mark, Icon, Field, Btn, Modal, useAction, Stars } from '../ui';
+import { useLoad, Loading, ErrorBox, Mark, Icon, Field, Btn, Modal, useAction, SignaturePad } from '../ui';
 import { SITE } from '../../config';
 
 const tokenFrom = (prefix: string) => location.pathname.replace(prefix, '').replace(/\/+$/, '').split('/')[0];
@@ -15,13 +15,17 @@ const CUSTOMER_STATUS: Record<string, string> = {
 
 // ------------------------------------------------------------ Invoice
 
+const DOC_TITLE: Record<string, string> = { quote: 'عرض سعر', work_order: 'أمر عمل', invoice: 'فاتورة', paid: 'فاتورة مسددة' };
+
 export function InvoicePage() {
   const token = tokenFrom('/i/');
-  const { data, error, loading } = useLoad(() => api(`/public/invoice/${token}`));
+  const { data, error, loading, reload } = useLoad(() => api(`/public/invoice/${token}`));
   if (loading) return <div class="center-page"><Loading /></div>;
   if (error) return <div class="center-page"><div class="box"><Brand /><ErrorBox error={error} /></div></div>;
   const i = data.invoice;
   const active = i.ends_at && new Date(i.ends_at) > new Date();
+  const st: string = i.doc_status;
+  const isInvoice = st === 'invoice' || st === 'paid';
   return (
     <div class="center-page">
       <div class="invoice stack">
@@ -32,9 +36,10 @@ export function InvoicePage() {
             <span class="small muted">{SITE.shopAr}{SITE.phone ? ` · ${SITE.phone}` : ''}</span>
           </div>
           <div class="stack" style="gap:4px;text-align:end">
-            <h1>فاتورة</h1>
+            <h1>{DOC_TITLE[st] ?? 'فاتورة'}</h1>
             <span class="num">{i.number}</span>
-            <span class="small muted">{fmtDate(i.issued_at)}</span>
+            <span class="small muted">{fmtDate(isInvoice ? i.invoiced_at ?? i.issued_at : i.issued_at)}</span>
+            {st === 'paid' && <span class="stamp-paid">مسددة</span>}
           </div>
         </div>
         <dl class="kv">
@@ -52,7 +57,7 @@ export function InvoicePage() {
           <span>المجموع</span><span class="num">{kd(i.subtotal_fils)}</span>
           {i.discount_fils > 0 && <><span>خصم</span><span class="num">- {kd(i.discount_fils)}</span></>}
           <span class="grand">الإجمالي</span><span class="grand num">{kd(i.total_fils)}</span>
-          <span class="muted">الدفع</span><span>{PAY[i.payment_status]}{i.payment_method ? ` (${PAY_METHOD[i.payment_method]})` : ''}</span>
+          {isInvoice && <><span class="muted">الدفع</span><span>{PAY[i.payment_status]}{i.payment_method ? ` (${PAY_METHOD[i.payment_method]})` : ''}</span></>}
         </div>
         {i.months ? (
           <div class="warranty-box">
@@ -66,12 +71,45 @@ export function InvoicePage() {
           </div>
         ) : null}
         {i.notes && <p class="small muted">{i.notes}</p>}
-        <p class="small muted" style="text-align:center">شكراً لثقتك. في الموعد.. وبالضمان</p>
+        {i.signed_at && (
+          <div class="stack" style="gap:4px">
+            <span class="small muted">موافقة العميل على العرض:</span>
+            <img class="sig-img" src={i.signature} alt="توقيع العميل" />
+            <span class="small muted">{i.signed_name ?? ''} · {fmtDate(i.signed_at)}</span>
+          </div>
+        )}
+        {st === 'quote' && <ApproveQuote token={token} name={i.customer_name} onDone={reload} />}
+        {st === 'work_order' && <div class="ok">وافقت على العرض ووقّعت. الفني بيبدأ الشغل، وبتوصلك الفاتورة بعد ما يخلص.</div>}
+        <p class="small muted" style="text-align:center">{st === 'quote' ? 'عرض السعر صالح 7 أيام.' : 'شكراً لثقتك.'} في الموعد.. وبالضمان</p>
         <div class="row no-print" style="justify-content:center">
           <button class="btn" onClick={() => window.print()}><Icon name="receipt" />اطبع أو احفظ PDF</button>
           <a class="btn" href="/my/"><Icon name="user" />حسابي</a>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ApproveQuote({ token, name, onDone }: { token: string; name: string; onDone: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [sig, setSig] = useState<string | null>(null);
+  const [signer, setSigner] = useState(name ?? '');
+  const [agree, setAgree] = useState(false);
+  const act = useAction();
+  if (!open) return <Btn variant="primary big no-print" icon="check" onClick={() => setOpen(true)}>أوافق على العرض وأوقّع</Btn>;
+  const submit = () => {
+    if (!agree) return act.setError('علّم على الموافقة أول');
+    if (!sig) return act.setError('وقّع في المربع');
+    act.run(async () => { await api(`/public/doc/${token}/sign`, { body: { signature: sig, name: signer } }); onDone(); });
+  };
+  return (
+    <div class="card stack no-print">
+      <h2>الموافقة والتوقيع</h2>
+      <ErrorBox error={act.error} />
+      <label class="check"><input type="checkbox" checked={agree} onChange={(e) => setAgree(e.currentTarget.checked)} />أوافق على عرض السعر والشغل المذكور</label>
+      <Field label="اسمك"><input id="ap-name" class="input" value={signer} onInput={(e) => setSigner(e.currentTarget.value)} /></Field>
+      <SignaturePad onChange={setSig} />
+      <Btn variant="primary big" busy={act.busy} onClick={submit}>اعتمد التوقيع</Btn>
     </div>
   );
 }
@@ -178,7 +216,7 @@ function Account({ onOut, initialError, forceOut }: { onOut: () => void; initial
         )}
         <div class="tabs">
           <button class={tab === 'orders' ? 'on' : ''} onClick={() => setTab('orders')}>طلباتي ({orders.length})</button>
-          <button class={tab === 'invoices' ? 'on' : ''} onClick={() => setTab('invoices')}>فواتيري ({invoices.length})</button>
+          <button class={tab === 'invoices' ? 'on' : ''} onClick={() => setTab('invoices')}>العروض والفواتير ({invoices.length})</button>
           <button class={tab === 'warranties' ? 'on' : ''} onClick={() => setTab('warranties')}>كفالاتي ({warranties.length})</button>
         </div>
         {tab === 'orders' && (orders.length === 0 ? <div class="empty">ما عندك طلبات.</div> : (
@@ -195,7 +233,7 @@ function Account({ onOut, initialError, forceOut }: { onOut: () => void; initial
           <div class="list">{invoices.map((i: any) => (
             <a class="item" href={`/i/${i.public_token}`}>
               <div class="top"><span class="title num">{i.number}</span><span class="num">{kd(i.total_fils)}</span></div>
-              <span class="small muted">{fmtDate(i.issued_at)} · طلب <span class="num">{i.code}</span> · {PAY[i.payment_status]}</span>
+              <span class="small muted">{DOC_TITLE[i.doc_status] ?? 'فاتورة'} · {fmtDate(i.issued_at)} · طلب <span class="num">{i.code}</span>{i.doc_status === 'quote' ? ' · ينتظر موافقتك' : ''}</span>
             </a>
           ))}</div>
         ))}

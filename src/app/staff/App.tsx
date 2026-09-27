@@ -26,7 +26,7 @@ const NAV: NavItem[] = [
   { path: '/followups', label: 'المتابعة', icon: 'headset', roles: ['admin', 'manager', 'cs'], badge: 'followups' },
   { path: '/orders', label: 'الطلبات', icon: 'list', roles: ['admin', 'manager', 'cs'] },
   { path: '/customers', label: 'العملاء', icon: 'user', roles: ['admin', 'manager', 'cs'] },
-  { path: '/invoices', label: 'الفواتير', icon: 'receipt', roles: ['admin', 'manager', 'cs'] },
+  { path: '/invoices', label: 'العروض والفواتير', icon: 'receipt', roles: ['admin', 'manager', 'cs'] },
   { path: '/surveys', label: 'الاستبيانات', icon: 'star', roles: ['admin', 'manager', 'cs'] },
   { path: '/team', label: 'الفريق', icon: 'users', roles: ['admin', 'manager'] },
   { path: '/services', label: 'الخدمات والأسعار', icon: 'tag', roles: ['admin', 'manager'] },

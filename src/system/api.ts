@@ -152,8 +152,8 @@ api.post('/price-items', requireStaff(...MANAGERS), async (c) => {
   const b = await body(c);
   if (!int(b.service_id) || !str(b.name_ar)) throw bad('الخدمة والاسم مطلوبين');
   const price = b.price_kd === '' || b.price_kd == null ? null : toFils(b.price_kd);
-  const r = await c.env.DB.prepare('INSERT INTO price_items (service_id, name_ar, name_en, price_fils, sort) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING id')
-    .bind(int(b.service_id), str(b.name_ar, 160), str(b.name_en, 160) ?? '', price, int(b.sort) ?? 0).first<{ id: number }>();
+  const r = await c.env.DB.prepare('INSERT INTO price_items (service_id, name_ar, name_en, price_fils, sort, kind) VALUES (?1, ?2, ?3, ?4, ?5, ?6) RETURNING id')
+    .bind(int(b.service_id), str(b.name_ar, 160), str(b.name_en, 160) ?? '', price, int(b.sort) ?? 0, b.kind === 'part' ? 'part' : 'labour').first<{ id: number }>();
   return c.json({ id: r!.id });
 });
 
@@ -162,9 +162,9 @@ api.patch('/price-items/:id', requireStaff(...MANAGERS), async (c) => {
   const price = 'price_kd' in b ? (b.price_kd === '' || b.price_kd == null ? null : toFils(b.price_kd)) : undefined;
   await c.env.DB.prepare(
     `UPDATE price_items SET name_ar = COALESCE(?1, name_ar), name_en = COALESCE(?2, name_en),
-     price_fils = CASE WHEN ?3 = 1 THEN ?4 ELSE price_fils END, active = COALESCE(?5, active) WHERE id = ?6`,
+     price_fils = CASE WHEN ?3 = 1 THEN ?4 ELSE price_fils END, active = COALESCE(?5, active), kind = COALESCE(?7, kind) WHERE id = ?6`,
   ).bind(str(b.name_ar, 160), str(b.name_en, 160), price === undefined ? 0 : 1, price ?? null,
-    b.active === undefined ? null : b.active ? 1 : 0, int(c.req.param('id'))).run();
+    b.active === undefined ? null : b.active ? 1 : 0, int(c.req.param('id')), b.kind === 'part' || b.kind === 'labour' ? b.kind : null).run();
   return c.json({ ok: true });
 });
 
@@ -198,7 +198,7 @@ api.get('/customers/:id', requireStaff(...OFFICE), async (c) => {
     c.env.DB.prepare(`SELECT o.id, o.code, o.status, o.created_at, o.finished_at, s.name_ar AS service, u.name AS tech
       FROM orders o LEFT JOIN services s ON s.id = o.service_id LEFT JOIN users u ON u.id = o.tech_id
       WHERE o.customer_id = ?1 ORDER BY o.id DESC`).bind(id),
-    c.env.DB.prepare('SELECT id, number, issued_at, total_fils, payment_status, order_id FROM invoices WHERE customer_id = ?1 ORDER BY id DESC').bind(id),
+    c.env.DB.prepare(`SELECT id, number, doc_status, issued_at, total_fils, payment_status, order_id FROM invoices WHERE customer_id = ?1 AND doc_status != 'cancelled' ORDER BY id DESC`).bind(id),
     c.env.DB.prepare('SELECT w.*, o.code FROM warranties w JOIN orders o ON o.id = w.order_id WHERE w.customer_id = ?1 ORDER BY w.ends_at DESC').bind(id),
   ]);
   return c.json({ customer: cust, addresses: addrs.results, orders: orders.results, invoices: invoices.results, warranties: warranties.results });
@@ -463,7 +463,7 @@ api.get('/photos/:id', async (c) => {
 
 type Item = { description: string; qty: number; unit_fils: number; kind: string; price_item_id: number | null };
 function parseItems(raw: unknown): Item[] {
-  if (!Array.isArray(raw) || !raw.length) throw bad('أضف بند واحد على الأقل في الفاتورة');
+  if (!Array.isArray(raw) || !raw.length) throw bad('أضف بند واحد على الأقل');
   return raw.slice(0, 40).map((r: any) => {
     const description = str(r.description, 200);
     const qty = Number(r.qty ?? 1);
@@ -473,21 +473,132 @@ function parseItems(raw: unknown): Item[] {
   });
 }
 
-/** Builds the WhatsApp message that sends the invoice, warranty, survey and account link. */
+// ---------------------------------------------------------------- Documents: quote -> work order -> invoice -> paid
+// One record per order in `invoices`. `doc_status` moves forward; `number` is Q-… while a quote/work order, INV-… once invoiced.
+
+export const DOC_AR: Record<string, string> = { quote: 'عرض سعر', work_order: 'أمر عمل', invoice: 'فاتورة', paid: 'فاتورة مسددة', cancelled: 'ملغي' };
+
+const yearNo = async (c: C, prefix: string, counter: string) => {
+  const y = new Date().getUTCFullYear();
+  return `${prefix}-${y}-${String(await nextCounter(c.env, `${counter}-${y}`)).padStart(5, '0')}`;
+};
+
+const docOf = (c: C, orderId: number) =>
+  c.env.DB.prepare(`SELECT * FROM invoices WHERE order_id = ?1 AND doc_status != 'cancelled' ORDER BY id DESC LIMIT 1`).bind(orderId).first<any>();
+
+function totals(items: Item[], discountKd: unknown) {
+  const subtotal = items.reduce((s, i) => s + Math.round(i.qty * i.unit_fils), 0);
+  const discount = Math.min(toFils(discountKd ?? 0) ?? 0, subtotal);
+  return { subtotal, discount, total: subtotal - discount };
+}
+
+function itemStmts(c: C, docId: number, items: Item[]) {
+  return [
+    c.env.DB.prepare('DELETE FROM invoice_items WHERE invoice_id = ?1').bind(docId),
+    ...items.map((i) => c.env.DB.prepare(
+      'INSERT INTO invoice_items (invoice_id, description, qty, unit_fils, total_fils, kind, price_item_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)',
+    ).bind(docId, i.description, i.qty, i.unit_fils, Math.round(i.qty * i.unit_fils), i.kind, i.price_item_id)),
+  ];
+}
+
+/** A signature is a PNG data URL drawn on screen; keep it small. */
+function parseSignature(v: unknown) {
+  const s = String(v ?? '');
+  if (!/^data:image\/png;base64,[A-Za-z0-9+/=]+$/.test(s)) throw bad('التوقيع ناقص. خل العميل يوقّع في المربع.');
+  if (s.length > 300_000) throw bad('التوقيع كبير وايد. امسحه ووقّع مرة ثانية.');
+  return s;
+}
+
+/** Creates or updates the quote for an order. Editing a signed work order returns it to a quote. */
+api.post('/orders/:id/quote', requireStaff(), async (c) => {
+  const o = await getOrderFor(c, int(c.req.param('id'))!);
+  if (['closed', 'cancelled'].includes(o.status)) throw bad('الطلب مغلق');
+  const b = await body(c);
+  const items = parseItems(b.items);
+  const t = totals(items, b.discount_kd);
+  let doc = await docOf(c, o.id);
+  if (doc && ['invoice', 'paid'].includes(doc.doc_status)) throw bad('انعملت فاتورة لهالطلب. عدّل من الفاتورة.');
+  const wasSigned = doc?.doc_status === 'work_order';
+  if (!doc) {
+    const number = await yearNo(c, 'Q', 'quote');
+    doc = await c.env.DB.prepare(
+      `INSERT INTO invoices (number, quote_number, order_id, customer_id, subtotal_fils, discount_fils, total_fils, public_token, notes, created_by, doc_status)
+       VALUES (?1, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, 'quote') RETURNING *`,
+    ).bind(number, o.id, o.customer_id, t.subtotal, t.discount, t.total, randomToken(18), str(b.notes, 500), me(c).id).first<any>();
+  } else {
+    await c.env.DB.prepare(
+      `UPDATE invoices SET subtotal_fils = ?1, discount_fils = ?2, total_fils = ?3, notes = ?4, doc_status = 'quote',
+       signature = NULL, signed_name = NULL, signed_at = NULL, signed_via = NULL WHERE id = ?5`,
+    ).bind(t.subtotal, t.discount, t.total, str(b.notes, 500), doc.id).run();
+  }
+  await c.env.DB.batch(itemStmts(c, doc.id, items));
+  await logActivity(c.env, me(c).id, 'order', o.id, wasSigned ? 'quote_changed_after_sign' : 'quote_saved', { total: kd(t.total) });
+  return c.json({ id: doc.id, number: doc.number, doc_status: 'quote', resign_needed: wasSigned });
+});
+
+/** WhatsApp message with the quote link so the customer can approve and sign remotely. */
+api.post('/orders/:id/quote/send', requireStaff(), async (c) => {
+  const o = await getOrderFor(c, int(c.req.param('id'))!);
+  const doc = await docOf(c, o.id);
+  if (!doc || doc.doc_status !== 'quote') throw bad('ما في عرض سعر ينتظر التوقيع');
+  const cust = await c.env.DB.prepare('SELECT name, phone FROM customers WHERE id = ?1').bind(o.customer_id).first<any>();
+  const text = [
+    `هلا ${cust.name}، هذا عرض السعر من شلال بيروت للطلب ${o.code}.`,
+    `الإجمالي: ${kd(doc.total_fils)} د.ك`,
+    `تقدر تشوف التفاصيل وتوافق وتوقّع من هني:`,
+    `${siteUrl(c)}/i/${doc.public_token}`,
+  ].join('\n');
+  await logActivity(c.env, me(c).id, 'order', o.id, 'quote_sent');
+  return c.json({ wa: waLink(cust.phone, text) });
+});
+
+async function signDoc(c: C, doc: any, signature: string, name: string | null, via: 'onsite' | 'link') {
+  if (doc.doc_status !== 'quote') throw bad(doc.doc_status === 'work_order' ? 'العرض موقّع من قبل' : 'هالمستند مو عرض سعر');
+  await c.env.DB.prepare(`UPDATE invoices SET doc_status = 'work_order', signature = ?1, signed_name = ?2, signed_at = ?3, signed_via = ?4 WHERE id = ?5`)
+    .bind(signature, name, nowIso(), via, doc.id).run();
+  const o = await c.env.DB.prepare('SELECT id, code, tech_id FROM orders WHERE id = ?1').bind(doc.order_id).first<any>();
+  await logActivity(c.env, c.get('user')?.id ?? null, 'order', o.id, 'signed', { via, name });
+  if (via === 'link') {
+    if (o.tech_id) await notify(c.env, { userId: o.tech_id }, 'quote.signed', `العميل وافق ووقّع على عرض السعر ${o.code}. تقدر تبدأ الشغل.`, o.id);
+    await notify(c.env, { role: 'cs' }, 'quote.signed', `العميل وقّع على عرض السعر ${o.code}`, o.id);
+  }
+  emit(c, 'quote.signed', { order_id: o.id, code: o.code, via });
+}
+
+api.post('/orders/:id/sign', requireStaff(), async (c) => {
+  const o = await getOrderFor(c, int(c.req.param('id'))!);
+  const doc = await docOf(c, o.id);
+  if (!doc) throw bad('اعمل عرض سعر أول');
+  const b = await body(c);
+  await signDoc(c, doc, parseSignature(b.signature), str(b.name, 80), 'onsite');
+  return c.json({ ok: true, doc_status: 'work_order' });
+});
+
+api.post('/public/doc/:token/sign', async (c) => {
+  await rateLimit(c.env, 'sign:' + ip(c), 20, 60);
+  const doc = await c.env.DB.prepare('SELECT * FROM invoices WHERE public_token = ?1').bind(c.req.param('token')).first<any>();
+  if (!doc) throw notFound('المستند مو موجود');
+  const b = await body(c);
+  await signDoc(c, doc, parseSignature(b.signature), str(b.name, 80), 'link');
+  return c.json({ ok: true });
+});
+
+/** WhatsApp message for the invoice: invoice + warranty, survey and account links. */
 async function invoiceMessage(c: C, invoiceId: number) {
   const inv = await c.env.DB.prepare(
-    `SELECT i.*, c.name, c.phone, o.code, o.id AS oid, s.token AS survey_token, w.months, w.ends_at
+    `SELECT i.*, c.name, c.phone, o.code, s.token AS survey_token, w.months, w.ends_at
      FROM invoices i JOIN customers c ON c.id = i.customer_id JOIN orders o ON o.id = i.order_id
      LEFT JOIN surveys s ON s.order_id = o.id LEFT JOIN warranties w ON w.invoice_id = i.id WHERE i.id = ?1`,
   ).bind(invoiceId).first<any>();
   if (!inv) throw notFound();
   const base = siteUrl(c);
   const account = await customerLink(c, inv.customer_id);
+  const paid = inv.doc_status === 'paid';
   const lines = [
     `هلا ${inv.name}، شكراً لثقتك في شلال بيروت 🌿`,
-    `فاتورة رقم ${inv.number} للطلب ${inv.code}`,
-    `المبلغ: ${kd(inv.total_fils)} د.ك`,
-    inv.months ? `الكفالة: ${inv.months} شهر، لين ${new Date(inv.ends_at).toLocaleDateString('ar-KW', { timeZone: 'Asia/Kuwait' })}` : null,
+    `${paid ? 'فاتورة مسددة' : 'فاتورة'} رقم ${inv.number} للطلب ${inv.code}`,
+    `المبلغ: ${kd(inv.total_fils)} د.ك${paid ? ' (مدفوع، شكراً لك)' : ''}`,
+    inv.months ? `الكفالة: ${inv.months} شهر، لين ${new Date(inv.ends_at).toLocaleDateString('ar-KW-u-nu-latn', { timeZone: 'Asia/Kuwait' })}` : null,
     `الفاتورة والكفالة: ${base}/i/${inv.public_token}`,
     inv.survey_token ? `شلون كانت الخدمة؟ قيّمنا بدقيقة: ${base}/r/${inv.survey_token}` : null,
     `حسابك (فواتيرك وكفالاتك): ${account}`,
@@ -495,34 +606,48 @@ async function invoiceMessage(c: C, invoiceId: number) {
   return { wa: waLink(inv.phone, lines.join('\n')), phone: inv.phone };
 }
 
+/**
+ * Job done: turns the work order (or quote, or nothing) into an invoice, adds warranty, survey and follow-up.
+ * Items are optional when a quote already exists.
+ */
 api.post('/orders/:id/finish', requireStaff(), async (c) => {
   const o = await getOrderFor(c, int(c.req.param('id'))!);
   if (!['in_progress', 'on_the_way', 'assigned', 'reopened'].includes(o.status)) throw bad('الطلب مو جاري');
   const b = await body(c);
-  const items = parseItems(b.items);
-  const subtotal = items.reduce((s, i) => s + Math.round(i.qty * i.unit_fils), 0);
-  const discount = Math.min(toFils(b.discount_kd ?? 0) ?? 0, subtotal);
-  const total = subtotal - discount;
+  let doc = await docOf(c, o.id);
+  if (doc && ['invoice', 'paid'].includes(doc.doc_status)) throw bad('الفاتورة معمولة من قبل');
   const months = int(b.warranty_months) ?? 0;
   if (months < 0 || months > 60) throw bad('مدة الكفالة غلط');
+
+  const now = nowIso();
+  const stmts: D1PreparedStatement[] = [];
+  if (!doc || b.items) {
+    const items = parseItems(b.items);
+    const t = totals(items, b.discount_kd);
+    if (!doc) {
+      doc = await c.env.DB.prepare(
+        `INSERT INTO invoices (number, order_id, customer_id, subtotal_fils, discount_fils, total_fils, public_token, created_by, doc_status)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'quote') RETURNING *`,
+      ).bind('TMP-' + randomToken(6), o.id, o.customer_id, t.subtotal, t.discount, t.total, randomToken(18), me(c).id).first<any>();
+    } else {
+      stmts.push(c.env.DB.prepare('UPDATE invoices SET subtotal_fils = ?1, discount_fils = ?2, total_fils = ?3 WHERE id = ?4').bind(t.subtotal, t.discount, t.total, doc.id));
+    }
+    stmts.push(...itemStmts(c, doc.id, items));
+    doc.total_fils = t.total;
+  }
+  const total = doc.total_fils;
   const payStatus = ['paid', 'partial', 'unpaid'].includes(b.payment_status) ? b.payment_status : 'unpaid';
   const paid = payStatus === 'paid' ? total : payStatus === 'partial' ? Math.min(toFils(b.paid_kd) ?? 0, total) : 0;
   const method = ['cash', 'knet', 'link', 'transfer'].includes(b.payment_method) ? b.payment_method : null;
+  const invNo = await yearNo(c, 'INV', 'invoice');
 
-  const now = nowIso();
-  const invNo = `INV-${new Date().getUTCFullYear()}-${String(await nextCounter(c.env, 'invoice-' + new Date().getUTCFullYear())).padStart(5, '0')}`;
-  const inv = await c.env.DB.prepare(
-    `INSERT INTO invoices (number, order_id, customer_id, subtotal_fils, discount_fils, total_fils, payment_status, paid_fils, payment_method, public_token, notes, created_by)
-     VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12) RETURNING id`,
-  ).bind(invNo, o.id, o.customer_id, subtotal, discount, total, payStatus, paid, method, randomToken(18), str(b.invoice_notes, 500), me(c).id).first<{ id: number }>();
-  const invoiceId = inv!.id;
-
-  const stmts = items.map((i) => c.env.DB.prepare(
-    'INSERT INTO invoice_items (invoice_id, description, qty, unit_fils, total_fils, kind, price_item_id) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)',
-  ).bind(invoiceId, i.description, i.qty, i.unit_fils, Math.round(i.qty * i.unit_fils), i.kind, i.price_item_id));
+  stmts.push(c.env.DB.prepare(
+    `UPDATE invoices SET number = ?1, doc_status = ?2, invoiced_at = ?3, issued_at = ?3, payment_status = ?4, paid_fils = ?5, payment_method = ?6,
+     paid_at = CASE WHEN ?2 = 'paid' THEN ?3 ELSE NULL END, notes = COALESCE(?7, notes) WHERE id = ?8`,
+  ).bind(invNo, payStatus === 'paid' ? 'paid' : 'invoice', now, payStatus, paid, method, str(b.invoice_notes, 500), doc.id));
   if (months > 0) {
     stmts.push(c.env.DB.prepare('INSERT INTO warranties (order_id, customer_id, invoice_id, months, starts_at, ends_at, covers) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)')
-      .bind(o.id, o.customer_id, invoiceId, months, now, addMonths(months), str(b.warranty_covers, 300)));
+      .bind(o.id, o.customer_id, doc.id, months, now, addMonths(months), str(b.warranty_covers, 300)));
   }
   stmts.push(
     c.env.DB.prepare(`UPDATE orders SET status = 'done', finished_at = ?1, tech_notes = COALESCE(?2, tech_notes), updated_at = ?1 WHERE id = ?3`).bind(now, str(b.notes, 2000), o.id),
@@ -530,10 +655,10 @@ api.post('/orders/:id/finish', requireStaff(), async (c) => {
     c.env.DB.prepare('INSERT INTO followups (order_id, due_at) VALUES (?1, ?2)').bind(o.id, addHours(24)),
   );
   await c.env.DB.batch(stmts);
-  await logActivity(c.env, me(c).id, 'order', o.id, 'finished', { invoice: invNo, total: kd(total), warranty_months: months });
+  await logActivity(c.env, me(c).id, 'order', o.id, 'finished', { invoice: invNo, total: kd(total), warranty_months: months, signed: !!doc.signed_at });
   await notify(c.env, { role: 'cs' }, 'order.done', `خلص الطلب ${o.code}، المتابعة مستحقة بعد 24 ساعة`, o.id);
   emit(c, 'order.done', { order_id: o.id, code: o.code, invoice: invNo, total_kd: kd(total), warranty_months: months });
-  return c.json({ invoice_id: invoiceId, number: invNo, ...(await invoiceMessage(c, invoiceId)) });
+  return c.json({ invoice_id: doc.id, number: invNo, ...(await invoiceMessage(c, doc.id)) });
 });
 
 api.post('/orders/:id/cancel', requireStaff(...OFFICE), async (c) => {
@@ -556,20 +681,23 @@ api.post('/orders/:id/reopen', requireStaff(...OFFICE), async (c) => {
 // ---------------------------------------------------------------- Invoices
 
 api.get('/invoices', requireStaff(...OFFICE), async (c) => {
-  const status = c.req.query('status');
+  const doc = c.req.query('doc');
+  const valid = ['quote', 'work_order', 'invoice', 'paid'].includes(doc ?? '');
   const rows = await c.env.DB.prepare(
-    `SELECT i.id, i.number, i.issued_at, i.total_fils, i.paid_fils, i.payment_status, i.sent_at, o.code, o.id AS order_id, c.name AS customer_name, c.phone AS customer_phone
+    `SELECT i.id, i.number, i.quote_number, i.doc_status, i.issued_at, i.total_fils, i.paid_fils, i.payment_status, i.sent_at, i.signed_at,
+            o.code, o.id AS order_id, c.name AS customer_name, c.phone AS customer_phone
      FROM invoices i JOIN orders o ON o.id = i.order_id JOIN customers c ON c.id = i.customer_id
-     ${status ? 'WHERE i.payment_status = ?1' : ''} ORDER BY i.id DESC LIMIT 200`,
-  ).bind(...(status ? [status] : [])).all();
+     WHERE i.doc_status != 'cancelled' ${valid ? 'AND i.doc_status = ?1' : ''} ORDER BY i.id DESC LIMIT 200`,
+  ).bind(...(valid ? [doc] : [])).all();
   return c.json({ invoices: rows.results });
 });
 
 api.post('/invoices/:id/send', requireStaff(), async (c) => {
   const id = int(c.req.param('id'))!;
-  const inv = await c.env.DB.prepare('SELECT order_id FROM invoices WHERE id = ?1').bind(id).first<any>();
+  const inv = await c.env.DB.prepare('SELECT order_id, doc_status FROM invoices WHERE id = ?1').bind(id).first<any>();
   if (!inv) throw notFound();
   await getOrderFor(c, inv.order_id);
+  if (!['invoice', 'paid'].includes(inv.doc_status)) throw bad('هذا عرض سعر، مو فاتورة. أرسل عرض السعر من صفحة الطلب.');
   const msg = await invoiceMessage(c, id);
   await c.env.DB.batch([
     c.env.DB.prepare('UPDATE invoices SET sent_at = ?1 WHERE id = ?2').bind(nowIso(), id),
@@ -582,12 +710,17 @@ api.post('/invoices/:id/send', requireStaff(), async (c) => {
 api.patch('/invoices/:id/payment', requireStaff(...OFFICE), async (c) => {
   const id = int(c.req.param('id'))!;
   const b = await body(c);
-  const inv = await c.env.DB.prepare('SELECT total_fils, order_id FROM invoices WHERE id = ?1').bind(id).first<any>();
+  const inv = await c.env.DB.prepare('SELECT total_fils, order_id, doc_status FROM invoices WHERE id = ?1').bind(id).first<any>();
   if (!inv) throw notFound();
+  if (!['invoice', 'paid'].includes(inv.doc_status)) throw bad('الدفع يتسجل على الفاتورة بعد ما يخلص الشغل');
   const status = ['paid', 'partial', 'unpaid'].includes(b.payment_status) ? b.payment_status : 'unpaid';
   const paid = status === 'paid' ? inv.total_fils : status === 'partial' ? Math.min(toFils(b.paid_kd) ?? 0, inv.total_fils) : 0;
-  await c.env.DB.prepare('UPDATE invoices SET payment_status = ?1, paid_fils = ?2, payment_method = ?3 WHERE id = ?4')
-    .bind(status, paid, ['cash', 'knet', 'link', 'transfer'].includes(b.payment_method) ? b.payment_method : null, id).run();
+  await c.env.DB.prepare(
+    `UPDATE invoices SET payment_status = ?1, paid_fils = ?2, payment_method = ?3,
+     doc_status = CASE WHEN ?1 = 'paid' THEN 'paid' ELSE 'invoice' END,
+     paid_at = CASE WHEN ?1 = 'paid' THEN COALESCE(paid_at, ?5) ELSE NULL END WHERE id = ?4`,
+  ).bind(status, paid, ['cash', 'knet', 'link', 'transfer'].includes(b.payment_method) ? b.payment_method : null, id, nowIso()).run();
+  if (status === 'paid') emit(c, 'invoice.paid', { order_id: inv.order_id, total_kd: kd(inv.total_fils) });
   await logActivity(c.env, me(c).id, 'order', inv.order_id, 'payment', { status, paid: kd(paid) });
   return c.json({ ok: true });
 });
@@ -702,8 +835,10 @@ api.get('/dashboard', requireStaff(...OFFICE), async (c) => {
         SUM(status IN ('done','closed') AND finished_at >= ?2) AS done_30d,
         (SELECT COUNT(*) FROM followups WHERE done_at IS NULL AND due_at <= ?1) AS followups_due,
         (SELECT COUNT(*) FROM warranties WHERE ends_at > ?1) AS active_warranties,
-        (SELECT COALESCE(SUM(total_fils),0) FROM invoices WHERE issued_at >= ?2) AS revenue_30d_fils,
-        (SELECT COALESCE(SUM(total_fils - paid_fils),0) FROM invoices WHERE payment_status != 'paid') AS unpaid_fils
+        (SELECT COALESCE(SUM(total_fils),0) FROM invoices WHERE doc_status IN ('invoice','paid') AND invoiced_at >= ?2) AS revenue_30d_fils,
+        (SELECT COALESCE(SUM(total_fils - paid_fils),0) FROM invoices WHERE doc_status = 'invoice') AS unpaid_fils,
+        (SELECT COUNT(*) FROM invoices WHERE doc_status = 'quote') AS open_quotes,
+        (SELECT COUNT(*) FROM invoices WHERE doc_status = 'work_order') AS work_orders
       FROM orders`).bind(now, since30),
     c.env.DB.prepare(`SELECT u.id, u.name,
         (SELECT COUNT(*) FROM orders o WHERE o.tech_id = u.id AND o.finished_at >= ?1) AS visits,
@@ -761,8 +896,8 @@ api.get('/my/summary', requireCustomer, async (c) => {
       FROM orders o LEFT JOIN services s ON s.id = o.service_id LEFT JOIN addresses a ON a.id = o.address_id
       LEFT JOIN users u ON u.id = o.tech_id LEFT JOIN surveys sv ON sv.order_id = o.id
       WHERE o.customer_id = ?1 AND o.status != 'cancelled' ORDER BY o.id DESC`).bind(id),
-    c.env.DB.prepare(`SELECT i.number, i.issued_at, i.total_fils, i.payment_status, i.public_token, o.code
-      FROM invoices i JOIN orders o ON o.id = i.order_id WHERE i.customer_id = ?1 ORDER BY i.id DESC`).bind(id),
+    c.env.DB.prepare(`SELECT i.number, i.doc_status, i.issued_at, i.total_fils, i.payment_status, i.public_token, o.code
+      FROM invoices i JOIN orders o ON o.id = i.order_id WHERE i.customer_id = ?1 AND i.doc_status != 'cancelled' ORDER BY i.id DESC`).bind(id),
     c.env.DB.prepare(`SELECT w.months, w.starts_at, w.ends_at, w.covers, o.code, s.name_ar AS service
       FROM warranties w JOIN orders o ON o.id = w.order_id LEFT JOIN services s ON s.id = o.service_id
       WHERE w.customer_id = ?1 ORDER BY w.ends_at DESC`).bind(id),
@@ -781,14 +916,15 @@ api.get('/my/orders/:id/photos', requireCustomer, async (c) => {
 
 api.get('/public/invoice/:token', async (c) => {
   const inv = await c.env.DB.prepare(
-    `SELECT i.id, i.number, i.issued_at, i.subtotal_fils, i.discount_fils, i.total_fils, i.payment_status, i.paid_fils, i.payment_method, i.notes,
+    `SELECT i.id, i.number, i.quote_number, i.doc_status, i.signature, i.signed_name, i.signed_at, i.signed_via, i.invoiced_at, i.paid_at,
+            i.issued_at, i.subtotal_fils, i.discount_fils, i.total_fils, i.payment_status, i.paid_fils, i.payment_method, i.notes,
             o.code, o.finished_at, c.name AS customer_name, s.name_ar AS service, u.name AS tech_name, a.governorate, a.area,
             w.months, w.starts_at, w.ends_at, w.covers
      FROM invoices i JOIN orders o ON o.id = i.order_id JOIN customers c ON c.id = i.customer_id
      LEFT JOIN services s ON s.id = o.service_id LEFT JOIN users u ON u.id = o.tech_id LEFT JOIN addresses a ON a.id = o.address_id
      LEFT JOIN warranties w ON w.invoice_id = i.id WHERE i.public_token = ?1`,
   ).bind(c.req.param('token')).first<any>();
-  if (!inv) throw notFound('الفاتورة مو موجودة');
+  if (!inv || inv.doc_status === 'cancelled') throw notFound('المستند مو موجود');
   const items = await c.env.DB.prepare('SELECT description, qty, unit_fils, total_fils, kind FROM invoice_items WHERE invoice_id = ?1 ORDER BY id').bind(inv.id).all();
   delete inv.id;
   return c.json({ invoice: { ...inv, items: items.results } });

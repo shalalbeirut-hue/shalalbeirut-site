@@ -22,6 +22,8 @@ export function Dashboard() {
         <div class="stat"><div class="v num" style="font-size:1.2rem">{kd(c.revenue_30d_fils)}</div><div class="l">فواتير آخر 30 يوم</div></div>
         <a class="stat" href="/app/invoices/"><div class="v num" style="font-size:1.2rem">{kd(c.unpaid_fils)}</div><div class="l">مبالغ غير محصّلة</div></a>
         <div class="stat"><div class="v">{c.active_warranties ?? 0}</div><div class="l">كفالات سارية</div></div>
+        <a class="stat" href="/app/invoices/"><div class="v">{c.open_quotes ?? 0}</div><div class="l">عروض أسعار تنتظر توقيع</div></a>
+        <a class="stat" href="/app/invoices/"><div class="v">{c.work_orders ?? 0}</div><div class="l">أوامر عمل موقّعة</div></a>
       </div>
 
       <div class="card">

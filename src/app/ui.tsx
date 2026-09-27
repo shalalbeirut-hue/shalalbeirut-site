@@ -1,6 +1,6 @@
 // Shared Preact UI pieces.
 import type { ComponentChildren } from 'preact';
-import { useEffect, useState, useCallback } from 'preact/hooks';
+import { useEffect, useState, useCallback, useRef } from 'preact/hooks';
 import { STATUS } from './lib';
 
 const P: Record<string, string> = {
@@ -115,5 +115,37 @@ export function Btn(props: BtnProps) {
     <button type="button" class={`btn ${variant} ${cls ?? ''}`} disabled={busy || rest.disabled} {...rest}>
       {icon && <Icon name={icon} />}{busy ? 'لحظة…' : children}
     </button>
+  );
+}
+
+/** Finger/mouse signature on a canvas. Calls onChange with a PNG data URL, or null when cleared. */
+export function SignaturePad({ onChange }: { onChange: (dataUrl: string | null) => void }) {
+  const ref = useRef<HTMLCanvasElement>(null);
+  const cb = useRef(onChange);
+  cb.current = onChange;
+  useEffect(() => {
+    const el = ref.current!;
+    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    el.width = el.clientWidth * ratio;
+    el.height = el.clientHeight * ratio;
+    const ctx = el.getContext('2d')!;
+    ctx.scale(ratio, ratio);
+    ctx.lineWidth = 2.4; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = '#14211b';
+    let drawing = false;
+    const pos = (e: PointerEvent) => { const r = el.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+    el.onpointerdown = (e) => { drawing = true; el.setPointerCapture(e.pointerId); const [x, y] = pos(e); ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 0.1, y + 0.1); ctx.stroke(); };
+    el.onpointermove = (e) => { if (!drawing) return; const [x, y] = pos(e); ctx.lineTo(x, y); ctx.stroke(); };
+    el.onpointerup = el.onpointercancel = () => { if (!drawing) return; drawing = false; cb.current(el.toDataURL('image/png')); };
+  }, []);
+  const clear = () => {
+    const el = ref.current!;
+    el.getContext('2d')!.clearRect(0, 0, el.width, el.height);
+    cb.current(null);
+  };
+  return (
+    <div class="sigpad">
+      <canvas ref={ref} aria-label="مكان توقيع العميل" />
+      <div class="row between"><span class="small muted">وقّع بإصبعك داخل المربع</span><button type="button" class="btn sm ghost" onClick={clear}>امسح</button></div>
+    </div>
   );
 }

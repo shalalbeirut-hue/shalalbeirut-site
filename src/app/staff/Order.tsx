@@ -6,6 +6,7 @@ import {
 } from '../lib';
 import { useLoad, Loading, ErrorBox, StatusBadge, Stars, Icon, Field, Btn, Modal, useAction } from '../ui';
 import { useApp } from './App';
+import { DocCard, FinishModal } from './Docs';
 
 const ACTION_AR: Record<string, string> = {
   created: 'انضاف الطلب', assigned: 'انسند', on_the_way: 'الفني طلع بالطريق', started: 'بدأ الشغل', photo: 'انضافت صورة',
@@ -56,6 +57,7 @@ export function OrderView({ id }: { id: number }) {
           {['assigned', 'reopened'].includes(o.status) && <Btn variant="water big block" icon="truck" busy={act.busy} onClick={onTheWay}>أنا بالطريق (يرسل رسالة للعميل)</Btn>}
           {['assigned', 'on_the_way', 'reopened'].includes(o.status) && <Btn variant="primary big block" icon="play" busy={act.busy} onClick={start}>بدأت الشغل مع {c.name}</Btn>}
           {o.status === 'in_progress' && <Btn variant="primary big block" icon="check" onClick={() => setModal('finish')}>خلّصت الشغل: الفاتورة والكفالة</Btn>}
+          {['in_progress', 'on_the_way', 'assigned'].includes(o.status) && (!invoice || invoice.doc_status === 'quote') && <p class="note small">{!invoice ? 'بعد المعاينة: اعمل عرض السعر تحت وخل العميل يوقّع قبل ما تبدأ.' : 'عرض السعر ينتظر توقيع العميل (تحت).'}</p>}
           {o.status === 'in_progress' && <p class="small muted">لا تنسى تصوّر قبل وبعد الشغل.</p>}
         </div>
       )}
@@ -105,24 +107,7 @@ export function OrderView({ id }: { id: number }) {
 
       <Photos orderId={id} photos={photos} canEdit={office || active} reload={reload} />
 
-      {invoice && (
-        <div class="card stack">
-          <div class="row between"><h2>الفاتورة <span class="num muted" style="font-size:.9rem">{invoice.number}</span></h2><span class={`badge ${invoice.payment_status === 'paid' ? 't-good' : invoice.payment_status === 'partial' ? 't-warn' : 't-bad'}`}>{PAY[invoice.payment_status]}</span></div>
-          <div class="table-wrap"><table>
-            <thead><tr><th>البند</th><th>الكمية</th><th>السعر</th><th>المجموع</th></tr></thead>
-            <tbody>{invoice.items.map((i: any) => <tr><td>{i.description}</td><td class="num">{i.qty}</td><td class="num">{kd(i.unit_fils)}</td><td class="num">{kd(i.total_fils)}</td></tr>)}</tbody>
-          </table></div>
-          <div class="row between">
-            <span>{invoice.discount_fils > 0 && <span class="muted small">خصم {kd(invoice.discount_fils)} · </span>}<b>الإجمالي: <span class="num">{kd(invoice.total_fils)}</span></b></span>
-            <span class="small muted">{invoice.payment_method ? PAY_METHOD[invoice.payment_method] : ''} {invoice.sent_at ? `· انرسلت ${fmtDateTime(invoice.sent_at)}` : '· ما انرسلت'}</span>
-          </div>
-          <div class="row">
-            <Btn variant="primary sm" icon="wa" busy={act.busy} onClick={sendInvoice}>{invoice.sent_at ? 'أرسلها مرة ثانية' : 'أرسل الفاتورة على الواتساب'}</Btn>
-            <a class="btn sm" href={`/i/${invoice.public_token}`} target="_blank" rel="noopener"><Icon name="receipt" />شكل الفاتورة عند العميل</a>
-            {office && <Btn variant="sm" onClick={() => setModal('payment')}>تحديث الدفع</Btn>}
-          </div>
-        </div>
-      )}
+      <DocCard order={o} doc={invoice} customer={c} service={service} canEdit={user.role !== 'tech' || o.tech_id === user.id} onChanged={reload} onPayment={office ? () => setModal('payment') : undefined} />
 
       {warranty && (
         <div class="card row">
@@ -172,7 +157,7 @@ export function OrderView({ id }: { id: number }) {
       )}
 
       {modal === 'assign' && <AssignModal order={o} onClose={() => setModal(null)} onDone={() => { setModal(null); reload(); }} />}
-      {modal === 'finish' && <FinishModal order={o} serviceId={o.service_id} defaultMonths={service?.default_warranty_months} onClose={() => setModal(null)} onDone={(r: { wa: string; number: string }) => { setModal(null); setSent(r); reload(); }} />}
+      {modal === 'finish' && <FinishModal order={o} doc={invoice} serviceId={o.service_id} defaultMonths={service?.default_warranty_months} onClose={() => setModal(null)} onDone={(r: { wa: string; number: string }) => { setModal(null); setSent(r); reload(); }} />}
       {modal === 'payment' && invoice && <PaymentModal invoice={invoice} onClose={() => setModal(null)} onDone={() => { setModal(null); reload(); }} />}
       {(modal === 'cancel' || modal === 'reopen') && <ReasonModal kind={modal} orderId={id} onClose={() => setModal(null)} onDone={() => { setModal(null); reload(); }} />}
     </div>
@@ -228,80 +213,6 @@ function AssignModal({ order, onClose, onDone }: any) {
       <Field label="الفني"><select id="as-tech" class="input" value={techId} onChange={(e) => setTechId(e.currentTarget.value)}><option value="">اختار</option>{techs.data?.users.filter((u: any) => u.active).map((u: any) => <option value={u.id}>{u.name}</option>)}</select></Field>
       <Field label="موعد الزيارة"><input id="as-when" class="input" type="datetime-local" value={when} onInput={(e) => setWhen(e.currentTarget.value)} /></Field>
       <Btn variant="primary" busy={busy} disabled={!techId} onClick={() => run(async () => { await api(`/orders/${order.id}/assign`, { body: { tech_id: Number(techId), scheduled_at: kuwaitLocalToIso(when) } }); onDone(); })}>حفظ</Btn>
-    </Modal>
-  );
-}
-
-type Line = { description: string; qty: string; unit_kd: string; kind: string; price_item_id?: number };
-function FinishModal({ order, serviceId, defaultMonths, onClose, onDone }: any) {
-  const services = useLoad(() => api('/services'));
-  const [items, setItems] = useState<Line[]>([{ description: '', qty: '1', unit_kd: '', kind: 'labour' }]);
-  const [discount, setDiscount] = useState('');
-  const [months, setMonths] = useState(String(defaultMonths ?? 3));
-  const [covers, setCovers] = useState('');
-  const [notes, setNotes] = useState('');
-  const [pay, setPay] = useState('unpaid');
-  const [method, setMethod] = useState('cash');
-  const [paid, setPaid] = useState('');
-  const { busy, error, run } = useAction();
-
-  const priceItems = (services.data?.services ?? []).flatMap((s: any) => s.items.filter((i: any) => i.active).map((i: any) => ({ ...i, svc: s.id, svcName: s.name_ar })))
-    .sort((a: any, b: any) => (a.svc === serviceId ? -1 : 0) - (b.svc === serviceId ? -1 : 0));
-  const setLine = (i: number, k: keyof Line, v: string) => setItems(items.map((l, j) => (j === i ? { ...l, [k]: v } : l)));
-  const addFromList = (id: string) => {
-    const p = priceItems.find((x: any) => String(x.id) === id);
-    if (!p) return;
-    const line = { description: p.name_ar, qty: '1', unit_kd: p.price_fils != null ? (p.price_fils / 1000).toFixed(3) : '', kind: 'labour', price_item_id: p.id };
-    setItems(items.length === 1 && !items[0].description ? [line] : [...items, line]);
-  };
-  const subtotal = items.reduce((s, l) => s + (Number(l.qty) || 0) * (Number(l.unit_kd) || 0), 0);
-  const total = Math.max(0, subtotal - (Number(discount) || 0));
-
-  const submit = () => run(async () => {
-    const r = await api(`/orders/${order.id}/finish`, {
-      body: { items, discount_kd: discount || 0, warranty_months: Number(months), warranty_covers: covers, notes, payment_status: pay, payment_method: pay === 'unpaid' ? null : method, paid_kd: paid },
-    });
-    onDone({ wa: r.wa, number: r.number });
-  });
-
-  return (
-    <Modal title="خلّصت الشغل: الفاتورة والكفالة" onClose={onClose}>
-      <ErrorBox error={error} />
-      <Field label="أضف من قائمة الأسعار">
-        <select id="fin-pick" class="input" value="" onChange={(e) => addFromList(e.currentTarget.value)}>
-          <option value="">اختار بند…</option>
-          {priceItems.map((p: any) => <option value={p.id}>{p.svcName}: {p.name_ar}{p.price_fils != null ? ` (${(p.price_fils / 1000).toFixed(3)})` : ''}</option>)}
-        </select>
-      </Field>
-      {items.map((l, i) => (
-        <div class="card stack" style="padding:12px">
-          <div class="row between"><b class="small">بند {i + 1}</b>{items.length > 1 && <button class="btn sm ghost danger" onClick={() => setItems(items.filter((_, j) => j !== i))}>حذف</button>}</div>
-          <input id={`fin-desc-${i}`} class="input" placeholder="وصف الشغل أو القطعة" value={l.description} onInput={(e) => setLine(i, 'description', e.currentTarget.value)} />
-          <div class="row">
-            <select id={`fin-kind-${i}`} class="input" style="width:auto" value={l.kind} onChange={(e) => setLine(i, 'kind', e.currentTarget.value)}><option value="labour">شغل</option><option value="part">قطعة</option><option value="other">أخرى</option></select>
-            <input id={`fin-qty-${i}`} class="input" style="width:80px" type="number" min="0" step="0.5" inputMode="decimal" dir="ltr" aria-label="الكمية" value={l.qty} onInput={(e) => setLine(i, 'qty', e.currentTarget.value)} />
-            <input id={`fin-price-${i}`} class="input grow" type="number" min="0" step="0.001" inputMode="decimal" dir="ltr" placeholder="السعر د.ك" aria-label="السعر بالدينار" value={l.unit_kd} onInput={(e) => setLine(i, 'unit_kd', e.currentTarget.value)} />
-          </div>
-        </div>
-      ))}
-      <Btn variant="sm" icon="plus" onClick={() => setItems([...items, { description: '', qty: '1', unit_kd: '', kind: 'part' }])}>أضف بند</Btn>
-      <div class="grid2">
-        <Field label="خصم (د.ك)"><input id="fin-disc" class="input" type="number" min="0" step="0.001" dir="ltr" value={discount} onInput={(e) => setDiscount(e.currentTarget.value)} /></Field>
-        <Field label="مدة الكفالة">
-          <select id="fin-months" class="input" value={months} onChange={(e) => setMonths(e.currentTarget.value)}>
-            <option value="0">بدون كفالة</option>{[1, 3, 6, 12, 24].map((m) => <option value={m}>{m} شهر</option>)}
-          </select>
-        </Field>
-      </div>
-      {months !== '0' && <Field label="الكفالة تشمل (اختياري)"><input id="fin-covers" class="input" placeholder="مثلاً: تسريب الحمام الرئيسي والقطع اللي تبدلت" value={covers} onInput={(e) => setCovers(e.currentTarget.value)} /></Field>}
-      <div class="grid2">
-        <Field label="الدفع"><select id="fin-pay" class="input" value={pay} onChange={(e) => setPay(e.currentTarget.value)}>{Object.entries(PAY).map(([k, v]) => <option value={k}>{v}</option>)}</select></Field>
-        {pay !== 'unpaid' && <Field label="طريقة الدفع"><select id="fin-method" class="input" value={method} onChange={(e) => setMethod(e.currentTarget.value)}>{Object.entries(PAY_METHOD).map(([k, v]) => <option value={k}>{v}</option>)}</select></Field>}
-        {pay === 'partial' && <Field label="المبلغ المدفوع (د.ك)"><input id="fin-paid" class="input" type="number" min="0" step="0.001" dir="ltr" value={paid} onInput={(e) => setPaid(e.currentTarget.value)} /></Field>}
-      </div>
-      <Field label="ملاحظات الفني (داخلية)"><textarea id="fin-notes" class="input" value={notes} onInput={(e) => setNotes(e.currentTarget.value)} /></Field>
-      <div class="row between"><span>الإجمالي</span><b class="num" style="font-size:1.2rem">{total.toFixed(3)} د.ك</b></div>
-      <Btn variant="primary big" busy={busy} icon="check" onClick={submit}>احفظ الفاتورة</Btn>
     </Modal>
   );
 }

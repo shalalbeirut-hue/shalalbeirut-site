@@ -60,13 +60,13 @@ function UserModal({ u, canAdmin, onClose, onDone }: any) {
 export function Services() {
   const { data, error, loading, reload } = useLoad(() => api('/services'));
   const act = useAction();
-  const [newItem, setNewItem] = useState<Record<number, { name_ar: string; price: string }>>({});
+  const [newItem, setNewItem] = useState<Record<number, { name_ar: string; price: string; kind?: string }>>({});
   const saveItem = (id: number, body: any) => act.run(async () => { await api(`/price-items/${id}`, { method: 'PATCH', body }); reload(); });
   const saveService = (id: number, body: any) => act.run(async () => { await api(`/services/${id}`, { method: 'PATCH', body }); reload(); });
   const addItem = (sid: number) => act.run(async () => {
     const n = newItem[sid];
     if (!n?.name_ar) return;
-    await api('/price-items', { body: { service_id: sid, name_ar: n.name_ar, price_kd: n.price } });
+    await api('/price-items', { body: { service_id: sid, name_ar: n.name_ar, price_kd: n.price, kind: n.kind ?? 'labour' } });
     setNewItem({ ...newItem, [sid]: { name_ar: '', price: '' } });
     reload();
   });
@@ -74,7 +74,7 @@ export function Services() {
   return (
     <div class="stack">
       <div class="page-head"><h1>الخدمات والأسعار</h1></div>
-      <p class="muted">الأسعار هني هي "يبدأ من" اللي تطلع للفني وقت الفاتورة. اترك السعر فاضي إذا يتحدد بعد المعاينة. التغيير ينحفظ لما تطلع من الخانة.</p>
+      <p class="muted">كل بند إما مصنعية أو قطعة غيار، ويطلع للفني في عرض السعر بضغطة. الأسعار هني هي "يبدأ من"، والفني يقدر يعدّلها. اترك السعر فاضي إذا يتحدد بعد المعاينة. التغيير ينحفظ لما تطلع من الخانة.</p>
       <ErrorBox error={error || act.error} />
       {data.services.map((s: any) => (
         <div class="card stack">
@@ -90,17 +90,19 @@ export function Services() {
             </div>
           </div>
           <div class="table-wrap"><table>
-            <thead><tr><th>البند</th><th>يبدأ من (د.ك)</th><th>ظاهر</th></tr></thead>
+            <thead><tr><th>البند</th><th>النوع</th><th>يبدأ من (د.ك)</th><th>ظاهر</th></tr></thead>
             <tbody>
               {s.items.map((i: any) => (
                 <tr>
                   <td><input id={`pi-n-${i.id}`} class="input" defaultValue={i.name_ar} onBlur={(e) => e.currentTarget.value !== i.name_ar && saveItem(i.id, { name_ar: e.currentTarget.value })} /></td>
+                  <td style="width:120px"><select id={`pi-k-${i.id}`} class="input" value={i.kind} onChange={(e) => saveItem(i.id, { kind: e.currentTarget.value })}><option value="labour">مصنعية</option><option value="part">قطعة غيار</option></select></td>
                   <td style="width:150px"><input id={`pi-p-${i.id}`} class="input" type="number" min="0" step="0.001" dir="ltr" placeholder="بعد المعاينة" defaultValue={i.price_fils != null ? (i.price_fils / 1000).toFixed(3) : ''} onBlur={(e) => saveItem(i.id, { price_kd: e.currentTarget.value })} /></td>
                   <td style="width:70px"><input type="checkbox" aria-label="ظاهر" checked={!!i.active} onChange={(e) => saveItem(i.id, { active: e.currentTarget.checked })} /></td>
                 </tr>
               ))}
               <tr>
                 <td><input id={`pi-new-n-${s.id}`} class="input" placeholder="بند جديد" value={newItem[s.id]?.name_ar ?? ''} onInput={(e) => setNewItem({ ...newItem, [s.id]: { ...(newItem[s.id] ?? { price: '' }), name_ar: e.currentTarget.value } })} /></td>
+                <td><select id={`pi-new-k-${s.id}`} class="input" value={newItem[s.id]?.kind ?? 'labour'} onChange={(e) => setNewItem({ ...newItem, [s.id]: { ...(newItem[s.id] ?? { name_ar: '', price: '' }), kind: e.currentTarget.value } })}><option value="labour">مصنعية</option><option value="part">قطعة غيار</option></select></td>
                 <td><input id={`pi-new-p-${s.id}`} class="input" type="number" min="0" step="0.001" dir="ltr" value={newItem[s.id]?.price ?? ''} onInput={(e) => setNewItem({ ...newItem, [s.id]: { ...(newItem[s.id] ?? { name_ar: '' }), price: e.currentTarget.value } })} /></td>
                 <td><Btn variant="sm primary" busy={act.busy} onClick={() => addItem(s.id)}>أضف</Btn></td>
               </tr>

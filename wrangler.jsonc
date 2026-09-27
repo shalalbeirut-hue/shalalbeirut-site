@@ -14,11 +14,34 @@
     { "pattern": "shalalbeirut.com", "custom_domain": true },
     { "pattern": "www.shalalbeirut.com", "custom_domain": true }
   ],
+  "vars": { "SITE_URL": "https://shalalbeirut.com" },
+  "d1_databases": [
+    { "binding": "DB", "database_name": "shalalbeirut-ops", "database_id": "3a93fee0-e147-414c-aa36-9c121f16a16a", "migrations_dir": "migrations" }
+  ],
+  // Photos need R2. Add this once R2 is enabled on the account:
+  // "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "shalalbeirut-photos" }],
+  "triggers": { "crons": ["0 5 * * *"] },
   "env": {
     "preview": {
       "name": "shalalbeirut-preview",
       "routes": [],
-      "workers_dev": true
+      "workers_dev": true,
+      "vars": { "SITE_URL": "https://shalalbeirut-preview.shalalbeirut.workers.dev" },
+      "d1_databases": [
+        { "binding": "DB", "database_name": "shalalbeirut-ops-preview", "database_id": "a46c02f9-af9d-4dbf-a331-0dcbb04e276e", "migrations_dir": "migrations" }
+      ],
+      "triggers": { "crons": [] }
+    },
+    // Local development only (npx wrangler dev --env dev). Everything is simulated on this PC.
+    "dev": {
+      "name": "shalalbeirut-dev",
+      "routes": [],
+      "vars": { "SITE_URL": "http://localhost:8787", "PBKDF2_ITERATIONS": "100000" },
+      "d1_databases": [
+        { "binding": "DB", "database_name": "shalalbeirut-ops-dev", "database_id": "local-dev", "migrations_dir": "migrations" }
+      ],
+      "r2_buckets": [{ "binding": "PHOTOS", "bucket_name": "shalalbeirut-photos-dev" }],
+      "triggers": { "crons": [] }
     }
   }
 }

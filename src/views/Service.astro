@@ -53,7 +53,7 @@ const serviceLd = {
 
   <section class="section">
     <div class="container grid grid-2">
-      <div class="card"><h2 class="h3">{ar ? 'وش تشمل الخدمة' : 'What is included'}</h2><ul class="checklist">{c.includes.map((i) => <li>{i}</li>)}</ul></div>
+      <div class="card"><h2 class="h3">{ar ? 'شنو تشمل الخدمة' : 'What is included'}</h2><ul class="checklist">{c.includes.map((i) => <li>{i}</li>)}</ul></div>
       <div class="card"><h2 class="h3">{ar ? 'متى تحتاجنا؟' : 'When to call us'}</h2><ul class="checklist">{c.signs.map((i) => <li>{i}</li>)}</ul></div>
     </div>
   </section>
@@ -61,7 +61,7 @@ const serviceLd = {
   <section class="section mist">
     <div class="container split">
       <div class="sec-head" style="margin:0"><h2>{ar ? `أسعار ${c.name}` : `${c.name} prices`}</h2>
-        <p>{ar ? 'أسعار تبدأ من. السعر النهائي بعد المعاينة وقبل ما نبدأ، وما نشتغل إلا بموافقتك.' : 'Starting prices. The final price is agreed after inspection and before any work.'}</p></div>
+        <p>{ar ? 'هذي أسعار تبدأ من. السعر النهائي بعد المعاينة وقبل لا نبدأ، وما نشتغل إلا إذا وافقت.' : 'Starting prices. The final price is agreed after inspection and before any work.'}</p></div>
       <div class="table-wrap">
         <table class="prices">
           <thead><tr><th scope="col">{ar ? 'الخدمة' : 'Job'}</th><th scope="col" class="num">{t.fromPrice}</th></tr></thead>

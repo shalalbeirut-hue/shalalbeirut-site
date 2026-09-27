@@ -1,0 +1,27 @@
+-- Services and price items, matching src/data/services.ts. Prices stay empty until the owner sets them.
+INSERT INTO services (slug, name_ar, name_en, sort) VALUES ('leak-detection', 'كشف تسربات المياه', 'Water leak detection', 1);
+INSERT INTO services (slug, name_ar, name_en, sort) VALUES ('drain-cleaning', 'تسليك المجاري والبلاعات', 'Drain unclogging', 2);
+INSERT INTO services (slug, name_ar, name_en, sort) VALUES ('plumbing', 'السباكة والتمديدات', 'Plumbing & pipework', 3);
+INSERT INTO services (slug, name_ar, name_en, sort) VALUES ('water-heaters', 'السخانات', 'Water heaters', 4);
+INSERT INTO services (slug, name_ar, name_en, sort) VALUES ('tanks-pumps', 'الخزانات والمضخات', 'Tanks & pumps', 5);
+INSERT INTO services (slug, name_ar, name_en, sort) VALUES ('water-coolers', 'برادات ومبردات المياه', 'Water coolers', 6);
+INSERT INTO services (slug, name_ar, name_en, sort) VALUES ('sanitary-ware', 'تركيب الأدوات الصحية', 'Sanitary ware installation', 7);
+INSERT INTO services (slug, name_ar, name_en, sort) VALUES ('contract', 'عقد صيانة', 'Maintenance contract', 8);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'leak-detection'), 'كشف تسربات (شقة / بيت)', 'Leak inspection (flat / house)', 1);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'leak-detection'), 'إصلاح تسريب ماسورة', 'Pipe leak repair', 2);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'drain-cleaning'), 'تسليك مغسلة أو مطبخ', 'Sink or kitchen drain', 3);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'drain-cleaning'), 'تسليك كرسي حمام', 'Toilet unclogging', 4);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'drain-cleaning'), 'تسليك خط رئيسي', 'Main line unclogging', 5);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'plumbing'), 'تبديل محبس', 'Valve replacement', 6);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'plumbing'), 'تمديدات (حسب المتر)', 'Pipework (per metre)', 7);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'water-heaters'), 'تبديل هيتر', 'Element replacement', 8);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'water-heaters'), 'تبديل ثرموستات', 'Thermostat replacement', 9);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'water-heaters'), 'تركيب سخان (بدون السخان)', 'Heater installation (labour)', 10);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'tanks-pumps'), 'تنظيف وتعقيم خزان', 'Tank cleaning & disinfection', 11);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'tanks-pumps'), 'تصليح مضخة', 'Pump repair', 12);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'tanks-pumps'), 'تبديل عوامة', 'Float valve replacement', 13);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'water-coolers'), 'صيانة براد مياه', 'Water cooler service', 14);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'water-coolers'), 'تصليح مبرد خزان', 'Tank chiller repair', 15);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'sanitary-ware'), 'تركيب خلاط', 'Mixer installation', 16);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'sanitary-ware'), 'تركيب كرسي حمام', 'Toilet installation', 17);
+INSERT INTO price_items (service_id, name_ar, name_en, sort) VALUES ((SELECT id FROM services WHERE slug = 'sanitary-ware'), 'تركيب مغسلة', 'Basin installation', 18);

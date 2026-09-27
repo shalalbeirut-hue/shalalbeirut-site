@@ -54,9 +54,9 @@ const crumbsLd = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', 
     <div class="card empty">
       <div class="icon-badge"><Icon name="star" /></div>
       <div class="stack" style="gap:8px">
-        <h3>{ar ? 'كن أول من يقيّمنا' : 'Be the first to review us'}</h3>
+        <h3>{ar ? 'خلك أول واحد يقيّمنا' : 'Be the first to review us'}</h3>
         <p class="muted">{ar
-          ? 'إحنا فريق جديد، وما راح ننشر إلا آراء عملاء حقيقيين وبموافقتهم. بعد كل زيارة بيوصلك استبيان قصير على الواتساب، ورأيك يساعدنا ويساعد غيرك يختار.'
+          ? 'إحنا فريق جديد، وما بننشر إلا آراء عملاء حقيقيين وبموافقتهم. بعد كل زيارة يوصلك استبيان قصير على الواتساب، ورأيك يفيدنا ويفيد غيرك يختار.'
           : 'We are a new team, and we only publish real customer reviews with their permission. After every visit you receive a short survey on WhatsApp. Your feedback helps us and helps others choose.'}</p>
         {SITE.googleReviewUrl
           ? <a class="btn btn-outline" style="align-self:flex-start" href={SITE.googleReviewUrl}>{ar ? 'قيّمنا على جوجل' : 'Review us on Google'}</a>

@@ -9,7 +9,7 @@ interface Props { lang: Lang; service?: string; }
 const { lang, service } = Astro.props;
 const ar = lang === 'ar';
 const L = ar
-  ? { name: 'الاسم', phone: 'رقم الموبايل', service: 'الخدمة', area: 'المحافظة', block: 'المنطقة والقطعة', desc: 'وصف المشكلة', when: 'الموعد المفضل', send: 'أرسل الطلب على الواتساب', note: 'بنرد عليك بموعد وسعر تقريبي. تقدر ترسل صورة أو فيديو للمشكلة في نفس المحادثة.', other: 'خدمة أخرى', any: 'أي وقت', morning: 'الصبح', afternoon: 'العصر', evening: 'المسا', noNumber: 'رقم الواتساب لسه ما انضاف للموقع.' }
+  ? { name: 'الاسم', phone: 'رقم الموبايل', service: 'الخدمة', area: 'المحافظة', block: 'المنطقة والقطعة', desc: 'شنو المشكلة؟', when: 'متى يناسبك؟', send: 'أرسل الطلب على الواتساب', note: 'نرد عليك بموعد وسعر تقريبي. وتقدر تطرش صورة أو فيديو للمشكلة بنفس المحادثة.', other: 'خدمة ثانية', any: 'أي وقت', morning: 'الصبح', afternoon: 'العصر', evening: 'بالليل', noNumber: 'رقم الواتساب باقي ما انضاف للموقع.' }
   : { name: 'Name', phone: 'Mobile number', service: 'Service', area: 'Governorate', block: 'Area and block', desc: 'Describe the problem', when: 'Preferred time', send: 'Send request on WhatsApp', note: 'We reply with a time slot and an estimate. You can send a photo or video of the problem in the same chat.', other: 'Other service', any: 'Any time', morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening', noNumber: 'The WhatsApp number has not been added to the site yet.' };
 ---
 <form class="form request-form" id="request" data-wa={SITE.whatsapp} data-lang={lang} novalidate>
@@ -54,8 +54,8 @@ const L = ar
       const phone = String(f.get('phone') || '').trim();
       const nameEl = form.querySelector<HTMLInputElement>('[name=name]')!;
       const phoneEl = form.querySelector<HTMLInputElement>('[name=phone]')!;
-      nameEl.setCustomValidity(name ? '' : ar ? 'اكتب اسمك' : 'Please enter your name');
-      phoneEl.setCustomValidity(/^[+\d\s-]{8,}$/.test(phone) ? '' : ar ? 'اكتب رقم موبايل صحيح' : 'Please enter a valid mobile number');
+      nameEl.setCustomValidity(name ? '' : ar ? 'اكتب اسمك لو سمحت' : 'Please enter your name');
+      phoneEl.setCustomValidity(/^[+\d\s-]{8,}$/.test(phone) ? '' : ar ? 'اكتب رقم موبايل صحيح لو سمحت' : 'Please enter a valid mobile number');
       if (!form.reportValidity()) return;
       const lines = ar
         ? ['السلام عليكم، أبي أحجز خدمة', `الاسم: ${name}`, `الموبايل: ${phone}`, `الخدمة: ${f.get('service')}`, `المحافظة: ${f.get('area')}`, `المنطقة/القطعة: ${f.get('block') || '-'}`, `الموعد المفضل: ${f.get('when')}`, `المشكلة: ${f.get('desc') || '-'}`]

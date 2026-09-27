@@ -28,7 +28,7 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
         <p class="kicker">{ar ? 'فني صحي في كل مناطق الكويت' : 'Plumbing across all of Kuwait'}</p>
         <h1>{ar ? <>في الموعد..<br />وبالضمان</> : <>On time.<br />Guaranteed.</>}</h1>
         <p class="lead">{ar
-          ? 'صيانة وتركيب كل ما يخص الماء في بيتك ومكتبك وشركتك، بفنيين محترفين وقطع أصلية من محلنا.'
+          ? 'نصون ونركّب كل شي يخص الماي في بيتك ومكتبك وشركتك، بفنيين محترفين وقطع أصلية من محلنا.'
           : 'Installation and maintenance for everything water-related in your home, office or company, by trained technicians with genuine parts from our own shop.'}</p>
         <div class="btn-row">
           <a class="btn btn-primary" href={waLink(t.waHello)}><Icon name="whatsapp" />{t.bookWa}</a>
@@ -42,8 +42,8 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
           <div class="stamp"><span class="s1">{ar ? 'ضمان' : 'WARRANTY'}</span><span class="s2">{ar ? 'مكتوب' : 'IN WRITING'}</span></div>
         </div>
         <ol class="hc-list">
-          <li><Icon name="clock" /><span><b>{ar ? 'موعد وصول محدد' : 'A fixed arrival time'}</b>{ar ? 'ورسالة والفني في الطريق' : 'and a message when we are on the way'}</span></li>
-          <li><Icon name="receipt" /><span><b>{ar ? 'السعر قبل الشغل' : 'Price before work'}</b>{ar ? 'ما نبدأ إلا بموافقتك' : 'nothing starts without your approval'}</span></li>
+          <li><Icon name="clock" /><span><b>{ar ? 'موعد وصول محدد' : 'A fixed arrival time'}</b>{ar ? 'ورسالة لك والفني بالطريق' : 'and a message when we are on the way'}</span></li>
+          <li><Icon name="receipt" /><span><b>{ar ? 'السعر قبل الشغل' : 'Price before work'}</b>{ar ? 'وما نبدأ إلا إذا وافقت' : 'nothing starts without your approval'}</span></li>
           <li><Icon name="shield" /><span><b>{ar ? 'قطع أصلية من محلنا' : 'Genuine parts from our shop'}</b>{ar ? 'وعليها ملصق ضمان' : 'each with a warranty sticker'}</span></li>
         </ol>
       </div>
@@ -54,22 +54,22 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
 
   <section class="section">
     <div class="container">
-      <div class="sec-head"><p class="kicker">{t.nav.services}</p><h2>{ar ? 'كل ما يخص الماء في مكان واحد' : 'Everything water-related, in one call'}</h2>
-        <p>{ar ? 'اختار الخدمة واطلبها على الواتساب مباشرة، أو افتح التفاصيل والأسعار.' : 'Pick a service and request it on WhatsApp, or open the details and prices.'}</p></div>
+      <div class="sec-head"><p class="kicker">{t.nav.services}</p><h2>{ar ? 'كل شي يخص الماي عندنا' : 'Everything water-related, in one call'}</h2>
+        <p>{ar ? 'اختار الخدمة واطلبها على الواتساب على طول، أو شوف التفاصيل والأسعار.' : 'Pick a service and request it on WhatsApp, or open the details and prices.'}</p></div>
       <Sections kind="services" lang={lang} />
     </div>
   </section>
 
   <section class="section mist">
     <div class="container">
-      <div class="sec-head"><p class="kicker">{ar ? 'مبادئنا في الشغل' : 'How we work'}</p><h2>{ar ? 'ستة وعود نلتزم فيها في كل زيارة' : 'Six promises on every visit'}</h2></div>
+      <div class="sec-head"><p class="kicker">{ar ? 'شلون نشتغل' : 'How we work'}</p><h2>{ar ? 'ست وعود نلتزم فيها بكل زيارة' : 'Six promises on every visit'}</h2></div>
       <Sections kind="principles" lang={lang} />
     </div>
   </section>
 
   <section class="section">
     <div class="container">
-      <div class="sec-head"><p class="kicker">{ar ? 'كيف تطلب الخدمة؟' : 'How to book'}</p><h2>{ar ? 'ثلاث خطوات وبس' : 'Three simple steps'}</h2></div>
+      <div class="sec-head"><p class="kicker">{ar ? 'شلون تطلب الخدمة؟' : 'How to book'}</p><h2>{ar ? 'ثلاث خطوات وبس' : 'Three simple steps'}</h2></div>
       <Sections kind="steps" lang={lang} />
     </div>
   </section>
@@ -78,8 +78,8 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
     <div class="container split">
       <div class="stack">
         <div class="sec-head" style="margin:0"><p class="kicker">{t.nav.prices}</p><h2>{ar ? 'أسعار واضحة قبل الزيارة' : 'Clear prices before the visit'}</h2>
-          <p>{ar ? 'أسعار تبدأ من، والسعر النهائي بعد المعاينة وقبل ما نبدأ.' : 'Starting prices. The final price is agreed after inspection and before work starts.'}</p></div>
-        <a class="btn btn-outline" style="align-self:flex-start" href={href(lang, '/prices/')}>{ar ? 'قائمة الأسعار كاملة' : 'Full price list'}</a>
+          <p>{ar ? 'هذي أسعار تبدأ من، والسعر النهائي بعد المعاينة وقبل لا نبدأ.' : 'Starting prices. The final price is agreed after inspection and before work starts.'}</p></div>
+        <a class="btn btn-outline" style="align-self:flex-start" href={href(lang, '/prices/')}>{ar ? 'شوف قائمة الأسعار كاملة' : 'Full price list'}</a>
       </div>
       <div class="table-wrap">
         <table class="prices">
@@ -112,8 +112,8 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
   <section class="section mist" id="book">
     <div class="container split">
       <div class="stack">
-        <div class="sec-head" style="margin:0"><p class="kicker">{ar ? 'اطلب الخدمة' : 'Request a visit'}</p><h2>{ar ? 'قول لنا وش المشكلة' : 'Tell us what is wrong'}</h2>
-          <p>{ar ? 'عبّي النموذج، وبينفتح لك الواتساب والرسالة جاهزة. أرسل معها صورة أو فيديو للمشكلة.' : 'Fill in the form and WhatsApp opens with your message ready. Add a photo or video of the problem.'}</p></div>
+        <div class="sec-head" style="margin:0"><p class="kicker">{ar ? 'اطلب الخدمة' : 'Request a visit'}</p><h2>{ar ? 'قول لنا شنو المشكلة' : 'Tell us what is wrong'}</h2>
+          <p>{ar ? 'عبّي النموذج، ويفتح لك الواتساب والرسالة جاهزة. وطرش ويّاها صورة أو فيديو للمشكلة.' : 'Fill in the form and WhatsApp opens with your message ready. Add a photo or video of the problem.'}</p></div>
       </div>
       <div class="card"><RequestForm lang={lang} /></div>
     </div>
@@ -121,14 +121,14 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
 
   <section class="section">
     <div class="container">
-      <div class="sec-head"><p class="kicker">{t.nav.areas}</p><h2>{ar ? 'نغطي كل محافظات الكويت' : 'We cover every governorate in Kuwait'}</h2></div>
+      <div class="sec-head"><p class="kicker">{t.nav.areas}</p><h2>{ar ? 'نوصلك في كل محافظات الكويت' : 'We cover every governorate in Kuwait'}</h2></div>
       <Sections kind="areas" lang={lang} />
     </div>
   </section>
 
   <section class="section mist">
     <div class="container narrow">
-      <div class="sec-head"><p class="kicker">{ar ? 'أسئلة شائعة' : 'FAQ'}</p><h2>{ar ? 'أسئلة يسألونها عملاؤنا' : 'Questions customers ask'}</h2></div>
+      <div class="sec-head"><p class="kicker">{ar ? 'أسئلة شائعة' : 'FAQ'}</p><h2>{ar ? 'أسئلة يسألونا عنها عملاؤنا' : 'Questions customers ask'}</h2></div>
       <Blocks kind="faq" lang={lang} items={FAQ[lang]} />
     </div>
   </section>

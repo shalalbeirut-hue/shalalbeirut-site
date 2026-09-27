@@ -25,7 +25,7 @@ const ar = lang === 'ar';
           <p class="svc-desc">{s[lang].short}</p>
           <ul class="svc-tags">{s[lang].includes.slice(0, 3).map((i) => <li>{i}</li>)}</ul>
           <div class="svc-foot">
-            <a class="svc-btn svc-btn-wa" href={waLink(`${t.waHello}: ${s[lang].name}`)}><Icon name="whatsapp" />{ar ? 'اطلبها' : 'Request'}</a>
+            <a class="svc-btn svc-btn-wa" href={waLink(`${t.waHello}: ${s[lang].name}`)}><Icon name="whatsapp" />{ar ? 'اطلبها الحين' : 'Request'}</a>
             <a class="svc-btn svc-btn-more" href={href(lang, `/services/${s.slug}/`)} aria-label={`${t.learnMore}: ${s[lang].name}`}>{t.learnMore}<Icon name="arrow" class="dir-arrow" /></a>
           </div>
         </article>
@@ -65,7 +65,7 @@ const ar = lang === 'ar';
   <section class="cta-band">
     <div class="container cta-inner">
       <div>
-        <h2>{ar ? 'عندك عطل؟ صوّره وأرسله لنا' : 'Got a problem? Send us a photo'}</h2>
+        <h2>{ar ? 'عندك عطل؟ صوّره وطرشه لنا' : 'Got a problem? Send us a photo'}</h2>
         <p>{ar ? 'نرد عليك بموعد وسعر تقريبي. في الموعد.. وبالضمان.' : 'We reply with a time slot and an estimate. On time, guaranteed.'}</p>
       </div>
       <div class="btn-row">

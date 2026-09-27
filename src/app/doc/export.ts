@@ -36,7 +36,8 @@ async function toFile(canvas: HTMLCanvasElement, doc: any, format: Format): Prom
   const imgH = (canvas.height * pageW) / canvas.width;
   const img = canvas.toDataURL('image/jpeg', 0.92);
   // Long documents continue on extra pages.
-  for (let y = 0, page = 0; y < imgH; y += pageH, page++) {
+  // A few mm of rounding past the page end must not start a new (blank) page.
+  for (let y = 0, page = 0; y < imgH - 3; y += pageH, page++) {
     if (page) pdf.addPage();
     pdf.addImage(img, 'JPEG', 0, -y, pageW, imgH);
   }

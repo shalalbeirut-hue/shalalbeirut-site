@@ -76,17 +76,6 @@ export function DocSheet({ doc, forExport }: { doc: any; forExport?: 'pdf' | 'pn
         </div>
       </section>
 
-      {isInvoice && doc.months ? (
-        <section class="sh-warranty">
-          <div class="seal">كفالة<br />{doc.months} شهر</div>
-          <div>
-            <b>{warrantyActive ? 'الكفالة سارية' : 'الكفالة انتهت'}</b> · من {fmtDate(doc.starts_at)} لين {fmtDate(doc.ends_at)}
-            {doc.covers && <div>تشمل: {doc.covers}</div>}
-            <div class="muted">إذا صار أي خلل في الشغل خلال الكفالة، طرّش لنا رقم الطلب على الواتساب ونجيك ببلاش.</div>
-          </div>
-        </section>
-      ) : null}
-
       <section class="sh-sign">
         <div class="sh-signbox">
           <div class="sh-label">موافقة العميل على العرض</div>
@@ -99,6 +88,18 @@ export function DocSheet({ doc, forExport }: { doc: any; forExport?: 'pdf' | 'pn
           <div class="muted">{doc.tech_name ?? ''}</div>
         </div>
       </section>
+
+      {isInvoice && doc.months ? (
+        <section class="sh-warranty">
+          <div class="seal">كفالة<br />{doc.months} شهر</div>
+          <div>
+            <b>{warrantyActive ? 'الكفالة سارية' : 'الكفالة انتهت'}</b> · من {fmtDate(doc.starts_at)} لين {fmtDate(doc.ends_at)}
+            {doc.covers && <div>تشمل: {doc.covers}</div>}
+            <div class="muted">إذا صار أي خلل في الشغل خلال الكفالة، طرّش لنا رقم الطلب على الواتساب ونجيك ببلاش.</div>
+          </div>
+        </section>
+      ) : null}
+
 
       <footer class="sh-foot">
         <span>في الموعد.. وبالضمان</span>

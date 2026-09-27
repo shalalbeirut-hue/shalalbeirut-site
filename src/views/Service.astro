@@ -1,0 +1,108 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import Sections from '../components/Sections.astro';
+import Blocks from '../components/Blocks.astro';
+import RequestForm from '../components/RequestForm.astro';
+import { SITE } from '../config';
+import { serviceBySlug } from '../data/services';
+import { AREAS } from '../data/areas';
+import { type Lang, href, UI, waLink, telLink } from '../i18n';
+interface Props { lang: Lang; slug: string; }
+const { lang, slug } = Astro.props;
+const s = serviceBySlug(slug);
+const c = s[lang];
+const t = UI[lang];
+const ar = lang === 'ar';
+const path = `/services/${slug}/`;
+const serviceLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: c.name,
+  description: c.desc,
+  serviceType: s.en.name,
+  provider: { '@id': SITE.url + '/#business' },
+  areaServed: { '@type': 'Country', name: 'Kuwait' },
+  url: SITE.url + href(lang, path),
+  hasOfferCatalog: {
+    '@type': 'OfferCatalog',
+    name: c.name,
+    itemListElement: s.prices.map((p) => ({
+      '@type': 'Offer',
+      itemOffered: { '@type': 'Service', name: p[lang] },
+      ...(p.from != null ? { priceSpecification: { '@type': 'PriceSpecification', minPrice: p.from, priceCurrency: 'KWD' } } : {}),
+    })),
+  },
+};
+---
+<Base lang={lang} path={path} title={c.title} desc={c.desc} jsonld={[serviceLd]}>
+  <div class="page-hero">
+    <div class="container">
+      <Blocks kind="crumbs" lang={lang} trail={[[t.home, '/'], [t.nav.services, '/services/'], [c.name, path]]} />
+      <div class="inner">
+        <div class="icon-badge big"><Icon name={s.icon} /></div>
+        <h1>{c.name}</h1>
+        <p class="lead">{c.intro}</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href={waLink(`${t.waHello}: ${c.name}`)}><Icon name="whatsapp" />{t.orderThis}</a>
+          <a class="btn btn-outline" href={telLink()}><Icon name="phone" />{t.call}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container grid grid-2">
+      <div class="card"><h2 class="h3">{ar ? 'وش تشمل الخدمة' : 'What is included'}</h2><ul class="checklist">{c.includes.map((i) => <li>{i}</li>)}</ul></div>
+      <div class="card"><h2 class="h3">{ar ? 'متى تحتاجنا؟' : 'When to call us'}</h2><ul class="checklist">{c.signs.map((i) => <li>{i}</li>)}</ul></div>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="container split">
+      <div class="sec-head" style="margin:0"><h2>{ar ? `أسعار ${c.name}` : `${c.name} prices`}</h2>
+        <p>{ar ? 'أسعار تبدأ من. السعر النهائي بعد المعاينة وقبل ما نبدأ، وما نشتغل إلا بموافقتك.' : 'Starting prices. The final price is agreed after inspection and before any work.'}</p></div>
+      <div class="table-wrap">
+        <table class="prices">
+          <thead><tr><th scope="col">{ar ? 'الخدمة' : 'Job'}</th><th scope="col" class="num">{t.fromPrice}</th></tr></thead>
+          <tbody>{s.prices.map((p) => <tr><td>{p[lang]}</td><td class="num">{p.from != null ? `${p.from} ${t.kd}` : <span class="ph">{t.priceOnVisit}</span>}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container split">
+      <div class="stack">
+        <h2>{ar ? 'اطلب الخدمة الحين' : 'Request this service'}</h2>
+        <p class="muted">{ar ? 'نرد عليك بموعد وسعر تقريبي. في الموعد.. وبالضمان.' : 'We reply with a time slot and an estimate. On time, guaranteed.'}</p>
+        <Sections kind="principles" lang={lang} />
+      </div>
+      <div class="card"><RequestForm lang={lang} service={slug} /></div>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="container narrow">
+      <h2 style="margin-bottom:20px">{ar ? 'أسئلة عن الخدمة' : 'Questions about this service'}</h2>
+      <Blocks kind="faq" lang={lang} items={c.faq} />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="sec-head"><h2>{ar ? `${c.name} في كل مناطق الكويت` : `${c.name} across Kuwait`}</h2></div>
+      <ul class="chips">{AREAS.map((a) => <li><a href={href(lang, `/areas/${a.slug}/`)}>{a[lang].name}</a></li>)}</ul>
+      <div class="sec-head" style="margin-top:48px"><h2>{ar ? 'خدمات ثانية' : 'Other services'}</h2></div>
+      <Sections kind="services" lang={lang} exclude={slug} />
+    </div>
+  </section>
+
+  <Sections kind="cta" lang={lang} />
+</Base>
+<style>
+  .icon-badge.big { width: 64px; height: 64px; border-radius: 18px; }
+  .icon-badge.big :global(svg) { width: 34px; height: 34px; }
+  .h3 { font-size: 1.25rem; }
+  .chips a { text-decoration: none; color: var(--cedar); }
+</style>

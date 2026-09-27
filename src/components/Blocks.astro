@@ -1,0 +1,75 @@
+---
+// FAQ, reviews and breadcrumbs, each with matching structured data.
+import Icon from './Icon.astro';
+import { SITE } from '../config';
+import { REVIEWS } from '../data/content';
+import { serviceBySlug } from '../data/services';
+import { type Lang, href } from '../i18n';
+interface Props {
+  kind: 'faq' | 'reviews' | 'crumbs';
+  lang: Lang;
+  items?: { q: string; a: string }[];
+  trail?: [string, string][]; // [label, neutral path]
+  limit?: number;
+}
+const { kind, lang, items = [], trail = [], limit } = Astro.props;
+const ar = lang === 'ar';
+const reviews = limit ? REVIEWS.slice(0, limit) : REVIEWS;
+const avg = REVIEWS.length ? REVIEWS.reduce((s, r) => s + r.rating, 0) / REVIEWS.length : 0;
+
+const faqLd = { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: items.map((i) => ({ '@type': 'Question', name: i.q, acceptedAnswer: { '@type': 'Answer', text: i.a } })) };
+const crumbsLd = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', itemListElement: trail.map(([name, p], i) => ({ '@type': 'ListItem', position: i + 1, name, item: SITE.url + href(lang, p) })) };
+---
+{kind === 'faq' && (
+  <>
+    <div class="faq">{items.map((i) => <details><summary>{i.q}</summary><p>{i.a}</p></details>)}</div>
+    <script type="application/ld+json" set:html={JSON.stringify(faqLd)} />
+  </>
+)}
+
+{kind === 'crumbs' && (
+  <>
+    <nav class="crumbs" aria-label={ar ? 'مسار الصفحة' : 'Breadcrumb'}>
+      <ol>{trail.map(([name, p], i) => <li>{i < trail.length - 1 ? <a href={href(lang, p)}>{name}</a> : <span aria-current="page">{name}</span>}</li>)}</ol>
+    </nav>
+    <script type="application/ld+json" set:html={JSON.stringify(crumbsLd)} />
+  </>
+)}
+
+{kind === 'reviews' && (
+  reviews.length > 0 ? (
+    <div class="stack">
+      <p class="summary"><span class="stars" aria-hidden="true">★★★★★</span> <b>{avg.toFixed(1)}</b> {ar ? `من ${REVIEWS.length} تقييم` : `from ${REVIEWS.length} reviews`}</p>
+      <div class="grid grid-3">
+        {reviews.map((r) => (
+          <figure class="card review">
+            <div class="stars" aria-label={`${r.rating}/5`}>{'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}</div>
+            <blockquote>{ar ? r.textAr : r.textEn ?? r.textAr}</blockquote>
+            <figcaption><b>{r.name}</b> · {r.area} · {serviceBySlug(r.service)?.[lang].name}</figcaption>
+          </figure>
+        ))}
+      </div>
+    </div>
+  ) : (
+    <div class="card empty">
+      <div class="icon-badge"><Icon name="star" /></div>
+      <div class="stack" style="gap:8px">
+        <h3>{ar ? 'كن أول من يقيّمنا' : 'Be the first to review us'}</h3>
+        <p class="muted">{ar
+          ? 'إحنا فريق جديد، وما راح ننشر إلا آراء عملاء حقيقيين وبموافقتهم. بعد كل زيارة بيوصلك استبيان قصير على الواتساب، ورأيك يساعدنا ويساعد غيرك يختار.'
+          : 'We are a new team, and we only publish real customer reviews with their permission. After every visit you receive a short survey on WhatsApp. Your feedback helps us and helps others choose.'}</p>
+        {SITE.googleReviewUrl
+          ? <a class="btn btn-outline" style="align-self:flex-start" href={SITE.googleReviewUrl}>{ar ? 'قيّمنا على جوجل' : 'Review us on Google'}</a>
+          : <span class="ph" style="align-self:flex-start">{ar ? '[لينك التقييم على جوجل بعد إنشاء Google Business]' : '[Google review link, once the Business Profile exists]'}</span>}
+      </div>
+    </div>
+  )
+)}
+
+<style>
+  .summary { font-size: 1.05rem; }
+  .review blockquote { margin: 0; font-size: 1.02rem; }
+  .review figcaption { color: var(--slate); font-size: 0.92rem; margin-top: auto; }
+  .empty { flex-direction: row; align-items: flex-start; gap: 18px; }
+  @media (max-width: 540px) { .empty { flex-direction: column; } }
+</style>

@@ -1,10 +1,24 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "shalalbeirut",
+  "main": "src/worker.ts",
   "compatibility_date": "2026-09-27",
-  "assets": { "directory": "./public" },
+  "build": { "command": "npm run build" },
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": true,
+    "not_found_handling": "404-page"
+  },
   "routes": [
     { "pattern": "shalalbeirut.com", "custom_domain": true },
     { "pattern": "www.shalalbeirut.com", "custom_domain": true }
-  ]
+  ],
+  "env": {
+    "preview": {
+      "name": "shalalbeirut-preview",
+      "routes": [],
+      "workers_dev": true
+    }
+  }
 }

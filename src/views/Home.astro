@@ -1,0 +1,167 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import Mark from '../components/Mark.astro';
+import Sections from '../components/Sections.astro';
+import Blocks from '../components/Blocks.astro';
+import RequestForm from '../components/RequestForm.astro';
+import { SITE } from '../config';
+import { SERVICES } from '../data/services';
+import { FAQ, CONTRACTS } from '../data/content';
+import { type Lang, href, UI, waLink, telLink } from '../i18n';
+interface Props { lang: Lang; }
+const { lang } = Astro.props;
+const t = UI[lang];
+const ar = lang === 'ar';
+
+const title = ar ? 'فني صحي بالكويت في الموعد وبالضمان | شلال بيروت' : 'Plumber in Kuwait, On Time and Guaranteed | Shalal Beirut';
+const desc = ar
+  ? 'شلال بيروت للأدوات الصحية وصيانتها: فني صحي في كل مناطق الكويت. كشف تسربات، تسليك مجاري، سخانات، خزانات ومضخات. موعد محدد، السعر قبل الشغل، وضمان مكتوب.'
+  : 'Shalal Beirut Sanitary Ware & Maintenance: plumbers across Kuwait for leak detection, drain unclogging, water heaters, tanks and pumps. Fixed arrival time, price before work, written warranty.';
+const teaser = SERVICES.flatMap((s) => s.prices.slice(0, 1).map((p) => ({ s, p }))).slice(0, 5);
+const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar ? SITE.nameAr : SITE.nameEn, url: SITE.url + href(lang, '/'), inLanguage: ar ? 'ar-KW' : 'en-KW' };
+---
+<Base lang={lang} path="/" title={title} desc={desc} jsonld={[website]}>
+  <section class="hero">
+    <div class="container hero-grid">
+      <div class="hero-copy">
+        <p class="kicker">{ar ? 'فني صحي في كل مناطق الكويت' : 'Plumbing across all of Kuwait'}</p>
+        <h1>{ar ? <>في الموعد..<br />وبالضمان</> : <>On time.<br />Guaranteed.</>}</h1>
+        <p class="lead">{ar
+          ? 'صيانة وتركيب كل ما يخص الماء في بيتك ومكتبك وشركتك، بفنيين محترفين وقطع أصلية من محلنا.'
+          : 'Installation and maintenance for everything water-related in your home, office or company, by trained technicians with genuine parts from our own shop.'}</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href={waLink(t.waHello)}><Icon name="whatsapp" />{t.bookWa}</a>
+          <a class="btn btn-outline" href={telLink()}><Icon name="phone" />{t.call}</a>
+        </div>
+        <ul class="trust">{t.trust.map((x) => <li><Icon name="check" />{x}</li>)}</ul>
+      </div>
+      <div class="hero-card" aria-hidden="true">
+        <div class="hc-top">
+          <Mark pipe="#FFFFFF" water="#62C0EA" class="hc-mark" />
+          <div class="stamp"><span class="s1">{ar ? 'ضمان' : 'WARRANTY'}</span><span class="s2">{ar ? 'مكتوب' : 'IN WRITING'}</span></div>
+        </div>
+        <ol class="hc-list">
+          <li><Icon name="clock" /><span><b>{ar ? 'موعد وصول محدد' : 'A fixed arrival time'}</b>{ar ? 'ورسالة والفني في الطريق' : 'and a message when we are on the way'}</span></li>
+          <li><Icon name="receipt" /><span><b>{ar ? 'السعر قبل الشغل' : 'Price before work'}</b>{ar ? 'ما نبدأ إلا بموافقتك' : 'nothing starts without your approval'}</span></li>
+          <li><Icon name="shield" /><span><b>{ar ? 'قطع أصلية من محلنا' : 'Genuine parts from our shop'}</b>{ar ? 'وعليها ملصق ضمان' : 'each with a warranty sticker'}</span></li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  {SITE.openingOffer && <div class="offer"><div class="container">{t.offer}</div></div>}
+
+  <section class="section">
+    <div class="container">
+      <div class="sec-head"><p class="kicker">{t.nav.services}</p><h2>{ar ? 'كل ما يخص الماء في مكان واحد' : 'Everything water-related, in one call'}</h2>
+        <p>{ar ? 'اختار الخدمة واطلبها على الواتساب مباشرة، أو افتح التفاصيل والأسعار.' : 'Pick a service and request it on WhatsApp, or open the details and prices.'}</p></div>
+      <Sections kind="services" lang={lang} />
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="container">
+      <div class="sec-head"><p class="kicker">{ar ? 'مبادئنا في الشغل' : 'How we work'}</p><h2>{ar ? 'ستة وعود نلتزم فيها في كل زيارة' : 'Six promises on every visit'}</h2></div>
+      <Sections kind="principles" lang={lang} />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="sec-head"><p class="kicker">{ar ? 'كيف تطلب الخدمة؟' : 'How to book'}</p><h2>{ar ? 'ثلاث خطوات وبس' : 'Three simple steps'}</h2></div>
+      <Sections kind="steps" lang={lang} />
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="container split">
+      <div class="stack">
+        <div class="sec-head" style="margin:0"><p class="kicker">{t.nav.prices}</p><h2>{ar ? 'أسعار واضحة قبل الزيارة' : 'Clear prices before the visit'}</h2>
+          <p>{ar ? 'أسعار تبدأ من، والسعر النهائي بعد المعاينة وقبل ما نبدأ.' : 'Starting prices. The final price is agreed after inspection and before work starts.'}</p></div>
+        <a class="btn btn-outline" style="align-self:flex-start" href={href(lang, '/prices/')}>{ar ? 'قائمة الأسعار كاملة' : 'Full price list'}</a>
+      </div>
+      <div class="table-wrap">
+        <table class="prices">
+          <thead><tr><th scope="col">{t.nav.services}</th><th scope="col" class="num">{t.fromPrice}</th></tr></thead>
+          <tbody>{teaser.map(({ s, p }) => <tr><td><a href={href(lang, `/services/${s.slug}/`)}>{p[lang]}</a></td><td class="num">{p.from != null ? `${p.from} ${t.kd}` : <span class="ph">{t.priceOnVisit}</span>}</td></tr>)}</tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="sec-head"><p class="kicker">{t.nav.reviews}</p><h2>{ar ? 'آراء عملائنا' : 'What customers say'}</h2></div>
+      <Blocks kind="reviews" lang={lang} limit={6} />
+    </div>
+  </section>
+
+  <section class="section deep">
+    <div class="container split">
+      <div class="stack">
+        <p class="kicker" style="color:#9CD6F2">{t.nav.contracts}</p>
+        <h2>{CONTRACTS[lang].h1}</h2>
+        <p>{CONTRACTS[lang].intro}</p>
+        <a class="btn btn-light" style="align-self:flex-start" href={href(lang, '/contracts/')}><Icon name="building" />{ar ? 'تفاصيل العقود' : 'Contract details'}</a>
+      </div>
+      <ul class="checklist on-dark">{CONTRACTS[lang].items.map((i) => <li>{i}</li>)}</ul>
+    </div>
+  </section>
+
+  <section class="section mist" id="book">
+    <div class="container split">
+      <div class="stack">
+        <div class="sec-head" style="margin:0"><p class="kicker">{ar ? 'اطلب الخدمة' : 'Request a visit'}</p><h2>{ar ? 'قول لنا وش المشكلة' : 'Tell us what is wrong'}</h2>
+          <p>{ar ? 'عبّي النموذج، وبينفتح لك الواتساب والرسالة جاهزة. أرسل معها صورة أو فيديو للمشكلة.' : 'Fill in the form and WhatsApp opens with your message ready. Add a photo or video of the problem.'}</p></div>
+      </div>
+      <div class="card"><RequestForm lang={lang} /></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="sec-head"><p class="kicker">{t.nav.areas}</p><h2>{ar ? 'نغطي كل محافظات الكويت' : 'We cover every governorate in Kuwait'}</h2></div>
+      <Sections kind="areas" lang={lang} />
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="container narrow">
+      <div class="sec-head"><p class="kicker">{ar ? 'أسئلة شائعة' : 'FAQ'}</p><h2>{ar ? 'أسئلة يسألونها عملاؤنا' : 'Questions customers ask'}</h2></div>
+      <Blocks kind="faq" lang={lang} items={FAQ[lang]} />
+    </div>
+  </section>
+
+  <Sections kind="cta" lang={lang} />
+</Base>
+
+<style>
+  .hero { background: linear-gradient(180deg, var(--mist), #fff); padding-block: clamp(36px, 7vw, 80px); overflow: hidden; }
+  .hero-grid { display: grid; gap: clamp(28px, 5vw, 64px); grid-template-columns: 1.15fr 0.85fr; align-items: center; }
+  @media (max-width: 900px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero-copy { display: flex; flex-direction: column; gap: 20px; }
+  .hero h1 { font-size: clamp(2.6rem, 8vw, 5rem); line-height: 1.08; }
+  .lead { font-size: clamp(1.05rem, 2.2vw, 1.25rem); color: var(--slate); max-width: 46ch; }
+  .trust { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 10px 18px; }
+  .trust li { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--cedar); }
+  .trust :global(svg) { width: 20px; height: 20px; color: var(--water); }
+
+  .hero-card { background: var(--deep); color: #d5e6dc; border-radius: 24px; padding: clamp(22px, 4vw, 32px); display: flex; flex-direction: column; gap: 22px; position: relative; box-shadow: 0 24px 60px rgba(15, 42, 31, 0.22); }
+  .hc-top { display: flex; justify-content: space-between; align-items: flex-start; }
+  :global(.hc-mark) { width: 104px; height: 114px; }
+  .stamp { width: 104px; height: 104px; border-radius: 50%; border: 3px dashed var(--sand); color: var(--sand); display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-10deg); text-align: center; line-height: 1.1; }
+  .s1 { font-family: 'Reem Kufi', var(--f-body); font-weight: 700; font-size: 1.5rem; }
+  :global(html[lang='en']) .s1 { font-family: var(--f-latin); font-size: 0.95rem; letter-spacing: 0.08em; }
+  .s2 { font-size: 0.8rem; font-weight: 600; }
+  .hc-list { list-style: none; padding: 0; display: grid; gap: 14px; border-top: 1px solid rgba(255, 255, 255, 0.12); padding-top: 20px; }
+  .hc-list li { display: flex; gap: 12px; align-items: flex-start; }
+  .hc-list :global(svg) { width: 26px; height: 26px; color: #62c0ea; flex-shrink: 0; }
+  .hc-list span { display: flex; flex-direction: column; }
+  .hc-list b { color: #fff; }
+
+  .offer { background: var(--sand); color: #3b2a06; text-align: center; font-weight: 700; padding-block: 14px; font-size: 1.05rem; }
+
+  .on-dark li::before { background-color: rgba(255, 255, 255, 0.12); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239CD6F2' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12l4 4 8-8'/%3E%3C/svg%3E"); }
+  .on-dark { color: #e6efe9; }
+</style>

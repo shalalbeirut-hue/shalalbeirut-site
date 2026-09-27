@@ -1,0 +1,68 @@
+---
+// Request form. Until the email endpoint exists (phase 2), it composes a WhatsApp message.
+import Icon from './Icon.astro';
+import { SITE } from '../config';
+import { SERVICES } from '../data/services';
+import { AREAS } from '../data/areas';
+import type { Lang } from '../i18n';
+interface Props { lang: Lang; service?: string; }
+const { lang, service } = Astro.props;
+const ar = lang === 'ar';
+const L = ar
+  ? { name: 'الاسم', phone: 'رقم الموبايل', service: 'الخدمة', area: 'المحافظة', block: 'المنطقة والقطعة', desc: 'وصف المشكلة', when: 'الموعد المفضل', send: 'أرسل الطلب على الواتساب', note: 'بنرد عليك بموعد وسعر تقريبي. تقدر ترسل صورة أو فيديو للمشكلة في نفس المحادثة.', other: 'خدمة أخرى', any: 'أي وقت', morning: 'الصبح', afternoon: 'العصر', evening: 'المسا', noNumber: 'رقم الواتساب لسه ما انضاف للموقع.' }
+  : { name: 'Name', phone: 'Mobile number', service: 'Service', area: 'Governorate', block: 'Area and block', desc: 'Describe the problem', when: 'Preferred time', send: 'Send request on WhatsApp', note: 'We reply with a time slot and an estimate. You can send a photo or video of the problem in the same chat.', other: 'Other service', any: 'Any time', morning: 'Morning', afternoon: 'Afternoon', evening: 'Evening', noNumber: 'The WhatsApp number has not been added to the site yet.' };
+---
+<form class="form request-form" id="request" data-wa={SITE.whatsapp} data-lang={lang} novalidate>
+  <div class="row">
+    <div class="field"><label for="rf-name">{L.name}</label><input id="rf-name" name="name" autocomplete="name" required /></div>
+    <div class="field"><label for="rf-phone">{L.phone}</label><input id="rf-phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" dir="ltr" required /></div>
+  </div>
+  <div class="row">
+    <div class="field">
+      <label for="rf-service">{L.service}</label>
+      <select id="rf-service" name="service">
+        {SERVICES.map((s) => <option value={s[lang].name} selected={s.slug === service}>{s[lang].name}</option>)}
+        <option value={ar ? 'عقد صيانة للشركات' : 'Business maintenance contract'}>{ar ? 'عقد صيانة للشركات' : 'Business maintenance contract'}</option>
+        <option value={L.other}>{L.other}</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="rf-area">{L.area}</label>
+      <select id="rf-area" name="area">{AREAS.map((a) => <option value={a[lang].name}>{a[lang].name}</option>)}</select>
+    </div>
+  </div>
+  <div class="row">
+    <div class="field"><label for="rf-block">{L.block}</label><input id="rf-block" name="block" autocomplete="address-level3" /></div>
+    <div class="field">
+      <label for="rf-when">{L.when}</label>
+      <select id="rf-when" name="when"><option>{L.any}</option><option>{L.morning}</option><option>{L.afternoon}</option><option>{L.evening}</option></select>
+    </div>
+  </div>
+  <div class="field"><label for="rf-desc">{L.desc}</label><textarea id="rf-desc" name="desc"></textarea></div>
+  <button class="btn btn-primary" type="submit"><Icon name="whatsapp" />{L.send}</button>
+  <p class="form-note" aria-live="polite" data-note>{L.note}</p>
+  <p class="form-note ph" hidden data-nonumber>{L.noNumber}</p>
+</form>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('form.request-form').forEach((form) => {
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const ar = form.dataset.lang === 'ar';
+      const f = new FormData(form);
+      const name = String(f.get('name') || '').trim();
+      const phone = String(f.get('phone') || '').trim();
+      const nameEl = form.querySelector<HTMLInputElement>('[name=name]')!;
+      const phoneEl = form.querySelector<HTMLInputElement>('[name=phone]')!;
+      nameEl.setCustomValidity(name ? '' : ar ? 'اكتب اسمك' : 'Please enter your name');
+      phoneEl.setCustomValidity(/^[+\d\s-]{8,}$/.test(phone) ? '' : ar ? 'اكتب رقم موبايل صحيح' : 'Please enter a valid mobile number');
+      if (!form.reportValidity()) return;
+      const lines = ar
+        ? ['السلام عليكم، أبي أحجز خدمة', `الاسم: ${name}`, `الموبايل: ${phone}`, `الخدمة: ${f.get('service')}`, `المحافظة: ${f.get('area')}`, `المنطقة/القطعة: ${f.get('block') || '-'}`, `الموعد المفضل: ${f.get('when')}`, `المشكلة: ${f.get('desc') || '-'}`]
+        : ['Hello, I would like to book a service', `Name: ${name}`, `Mobile: ${phone}`, `Service: ${f.get('service')}`, `Governorate: ${f.get('area')}`, `Area/block: ${f.get('block') || '-'}`, `Preferred time: ${f.get('when')}`, `Problem: ${f.get('desc') || '-'}`];
+      const wa = form.dataset.wa;
+      if (!wa) { form.querySelector<HTMLElement>('[data-nonumber]')!.hidden = false; return; }
+      window.location.href = `https://wa.me/${wa}?text=${encodeURIComponent(lines.join('\n'))}`;
+    });
+  });
+</script>

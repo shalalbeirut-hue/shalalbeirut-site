@@ -1,0 +1,19 @@
+---
+import Icon from './Icon.astro';
+import { type Lang, UI, waLink, telLink } from '../i18n';
+interface Props { lang: Lang; }
+const { lang } = Astro.props;
+const t = UI[lang];
+---
+<div class="mobile-bar" role="navigation" aria-label={lang === 'ar' ? 'تواصل سريع' : 'Quick contact'}>
+  <a class="btn btn-outline" href={telLink()}><Icon name="phone" />{t.call}</a>
+  <a class="btn btn-primary" href={waLink(t.waHello)}><Icon name="whatsapp" />{lang === 'ar' ? 'واتساب' : 'WhatsApp'}</a>
+</div>
+<style>
+  .mobile-bar { display: none; }
+  @media (max-width: 760px) {
+    .mobile-bar { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; position: fixed; inset-inline: 0; bottom: 0; z-index: 30; background: #fff; border-top: 1px solid var(--line); padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px)); box-shadow: 0 -6px 20px rgba(15, 42, 31, 0.08); }
+    .mobile-bar .btn { min-height: 50px; background-color: #fff; }
+    .mobile-bar .btn-primary { background: var(--cedar); }
+  }
+</style>

@@ -1,0 +1,78 @@
+---
+import Mark from './Mark.astro';
+import Icon from './Icon.astro';
+import { SITE } from '../config';
+import { SERVICES } from '../data/services';
+import { AREAS } from '../data/areas';
+import { type Lang, href, UI, waLink, telLink, displayPhone } from '../i18n';
+interface Props { lang: Lang; }
+const { lang } = Astro.props;
+const t = UI[lang];
+const ar = lang === 'ar';
+const socials = [
+  ['Instagram', SITE.social.instagram],
+  ['TikTok', SITE.social.tiktok],
+  ['Snapchat', SITE.social.snapchat],
+].filter(([, u]) => u);
+const year = new Date().getFullYear();
+---
+<footer class="site-footer">
+  <div class="container cols">
+    <div class="about">
+      <div class="logo-row">
+        <Mark pipe="#FFFFFF" water="#62C0EA" class="f-mark" />
+        <div>
+          <div class="f-name">{ar ? 'شلال بيروت' : 'Shalal Beirut'}</div>
+          <div class="f-sub">{ar ? 'للأدوات الصحية وصيانتها' : 'Sanitary Ware & Maintenance'}</div>
+        </div>
+      </div>
+      <p>{t.footerAbout}</p>
+      <p class="f-tag">{t.tagline}</p>
+    </div>
+    <div>
+      <h2 class="f-h">{t.nav.services}</h2>
+      <ul class="f-list">{SERVICES.map((s) => <li><a href={href(lang, `/services/${s.slug}/`)}>{s[lang].name}</a></li>)}</ul>
+    </div>
+    <div>
+      <h2 class="f-h">{t.nav.areas}</h2>
+      <ul class="f-list">{AREAS.map((a) => <li><a href={href(lang, `/areas/${a.slug}/`)}>{a[lang].name}</a></li>)}</ul>
+    </div>
+    <div>
+      <h2 class="f-h">{t.nav.contact}</h2>
+      <ul class="f-list contact">
+        <li><Icon name="whatsapp" /><a href={waLink(t.waHello)}>{SITE.whatsapp ? displayPhone(lang) : (ar ? '[رقم الواتساب]' : '[WhatsApp number]')}</a></li>
+        <li><Icon name="phone" /><a href={telLink()} dir="ltr">{displayPhone(lang)}</a></li>
+        <li><Icon name="mail" /><a href={`mailto:${SITE.email}`}>{SITE.email}</a></li>
+        <li><Icon name="pin" />{SITE.mapsUrl ? <a href={SITE.mapsUrl}>{ar ? SITE.shopAr : SITE.shopEn}</a> : <span>{ar ? SITE.shopAr : SITE.shopEn}</span>}</li>
+      </ul>
+      {socials.length > 0 && <p class="socials">{socials.map(([n, u]) => <a href={u} rel="me noopener">{n}</a>)}</p>}
+      <ul class="f-list small">
+        <li><a href={href(lang, '/warranty/')}>{ar ? 'سياسة الضمان' : 'Warranty policy'}</a></li>
+        <li><a href={href(lang, '/about/')}>{ar ? 'من نحن' : 'About us'}</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="container legal">© {year} {ar ? SITE.legalAr : SITE.legalEn}. {t.rights}.</div>
+</footer>
+
+<style>
+  .site-footer { background: var(--deep); color: #c9dacf; padding-block: 56px 24px; }
+  .cols { display: grid; gap: 32px; grid-template-columns: 1.4fr 1fr 1fr 1.2fr; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 540px) { .cols { grid-template-columns: 1fr; } }
+  .about { display: flex; flex-direction: column; gap: 14px; }
+  .logo-row { display: flex; gap: 12px; align-items: center; }
+  :global(.f-mark) { width: 48px; height: 54px; }
+  .f-name { font-family: 'Reem Kufi', var(--f-body); font-weight: 700; font-size: 1.5rem; color: #fff; line-height: 1.1; }
+  .f-sub { font-size: 0.85rem; }
+  .f-tag { font-family: 'Reem Kufi', var(--f-body); font-weight: 700; color: #fff; font-size: 1.2rem; }
+  .f-h { font-family: var(--f-body); font-size: 1rem; color: #fff; margin-bottom: 12px; }
+  .f-list { list-style: none; padding: 0; display: grid; gap: 8px; }
+  .f-list a, .socials a { color: #c9dacf; text-decoration: none; }
+  .f-list a:hover, .socials a:hover { color: #fff; text-decoration: underline; }
+  .contact li { display: flex; gap: 10px; align-items: center; }
+  .contact :global(svg) { width: 18px; height: 18px; color: #62c0ea; flex-shrink: 0; }
+  .socials { display: flex; gap: 14px; margin-top: 14px; }
+  .small { margin-top: 16px; font-size: 0.92rem; }
+  .legal { border-top: 1px solid rgba(255, 255, 255, 0.12); margin-top: 40px; padding-top: 18px; font-size: 0.85rem; color: #8fa89a; }
+</style>

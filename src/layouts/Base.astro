@@ -1,0 +1,85 @@
+---
+import '@fontsource/reem-kufi/700.css';
+import '@fontsource/ibm-plex-sans-arabic/400.css';
+import '@fontsource/ibm-plex-sans-arabic/600.css';
+import '@fontsource/readex-pro/400.css';
+import '@fontsource/readex-pro/600.css';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import MobileBar from '../components/MobileBar.astro';
+import { SITE } from '../config';
+import { type Lang, href, dir, UI } from '../i18n';
+
+interface Props {
+  lang: Lang;
+  path: string; // language-neutral path, e.g. '/services/leak-detection/'
+  title: string;
+  desc: string;
+  jsonld?: object[];
+  noindex?: boolean;
+}
+const { lang, path, title, desc, jsonld = [], noindex = false } = Astro.props;
+const canonical = SITE.url + href(lang, path);
+const alt = { ar: SITE.url + href('ar', path), en: SITE.url + href('en', path) };
+const ogImage = SITE.url + (lang === 'ar' ? '/og-ar.png' : '/og-en.png');
+const missingData = !SITE.whatsapp || !SITE.phone;
+
+// Every page carries the business entity so Google ties all pages to one local business.
+const business = {
+  '@context': 'https://schema.org',
+  '@type': 'Plumber',
+  '@id': SITE.url + '/#business',
+  name: lang === 'ar' ? SITE.legalAr : SITE.legalEn,
+  alternateName: [SITE.nameAr, SITE.nameEn],
+  url: SITE.url + href(lang, '/'),
+  logo: SITE.url + '/logo-512.png',
+  image: SITE.url + '/logo-512.png',
+  email: SITE.email,
+  ...(SITE.phone ? { telephone: '+' + SITE.phone } : {}),
+  address: { '@type': 'PostalAddress', addressCountry: 'KW', addressLocality: lang === 'ar' ? 'الكويت' : 'Kuwait' },
+  ...(SITE.geo ? { geo: { '@type': 'GeoCoordinates', latitude: SITE.geo.lat, longitude: SITE.geo.lng } } : {}),
+  areaServed: ['Capital', 'Hawalli', 'Farwaniya', 'Ahmadi', 'Jahra', 'Mubarak Al-Kabeer'].map((n) => ({ '@type': 'AdministrativeArea', name: n + ' Governorate, Kuwait' })),
+  openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'], opens: SITE.hours.opens, closes: SITE.hours.closes }],
+  sameAs: Object.values(SITE.social).filter(Boolean),
+};
+const blocks = [business, ...jsonld];
+---
+<!doctype html>
+<html lang={lang} dir={dir(lang)}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={canonical} />
+    <link rel="alternate" hreflang="ar-KW" href={alt.ar} />
+    <link rel="alternate" hreflang="en-KW" href={alt.en} />
+    <link rel="alternate" hreflang="x-default" href={alt.ar} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <meta name="theme-color" content="#0F2A1F" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={lang === 'ar' ? SITE.nameAr : SITE.nameEn} />
+    <meta property="og:locale" content={lang === 'ar' ? 'ar_KW' : 'en_KW'} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    {blocks.map((b) => <script type="application/ld+json" set:html={JSON.stringify(b)} />)}
+  </head>
+  <body>
+    {missingData && <div class="preview-note">{UI[lang].placeholderNote}</div>}
+    <Header lang={lang} path={path} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+    <MobileBar lang={lang} />
+  </body>
+</html>

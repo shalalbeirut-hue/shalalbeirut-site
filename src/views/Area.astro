@@ -1,0 +1,68 @@
+---
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import Sections from '../components/Sections.astro';
+import Blocks from '../components/Blocks.astro';
+import RequestForm from '../components/RequestForm.astro';
+import { SITE } from '../config';
+import { AREAS } from '../data/areas';
+import { type Lang, href, UI, waLink } from '../i18n';
+interface Props { lang: Lang; slug: string; }
+const { lang, slug } = Astro.props;
+const a = AREAS.find((x) => x.slug === slug)!;
+const c = a[lang];
+const t = UI[lang];
+const ar = lang === 'ar';
+const path = `/areas/${slug}/`;
+const h1 = ar ? `فني صحي ${c.name}` : `Plumber in ${c.name}`;
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: h1,
+  serviceType: 'Plumbing',
+  provider: { '@id': SITE.url + '/#business' },
+  areaServed: { '@type': 'AdministrativeArea', name: `${a.en.name} Governorate, Kuwait` },
+  url: SITE.url + href(lang, path),
+};
+---
+<Base lang={lang} path={path} title={c.title} desc={c.desc} jsonld={[ld]}>
+  <div class="page-hero">
+    <div class="container">
+      <Blocks kind="crumbs" lang={lang} trail={[[t.home, '/'], [t.nav.areas, '/areas/'], [c.name, path]]} />
+      <div class="inner">
+        <h1>{h1}</h1>
+        <p class="lead">{c.intro}</p>
+        <div class="btn-row"><a class="btn btn-primary" href={waLink(`${t.waHello} (${c.name})`)}><Icon name="whatsapp" />{t.bookWa}</a></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="section">
+    <div class="container">
+      <div class="sec-head"><h2>{ar ? `المناطق اللي نغطيها في ${c.name}` : `Areas we cover in ${c.name}`}</h2></div>
+      <ul class="chips">{c.places.map((p) => <li>{p}</li>)}</ul>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="container">
+      <div class="sec-head"><h2>{ar ? `خدماتنا في ${c.name}` : `Our services in ${c.name}`}</h2></div>
+      <Sections kind="services" lang={lang} />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container split">
+      <div class="stack"><h2>{ar ? 'اطلب فني الحين' : 'Book a technician'}</h2><Sections kind="steps" lang={lang} /></div>
+      <div class="card"><RequestForm lang={lang} /></div>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="container">
+      <div class="sec-head"><h2>{ar ? 'محافظات ثانية' : 'Other governorates'}</h2></div>
+      <Sections kind="areas" lang={lang} />
+    </div>
+  </section>
+  <Sections kind="cta" lang={lang} />
+</Base>

@@ -1,0 +1,103 @@
+---
+// Small shared blocks, picked by `kind` so pages stay short.
+import Icon from './Icon.astro';
+import { SERVICES } from '../data/services';
+import { AREAS } from '../data/areas';
+import { PRINCIPLES, STEPS } from '../data/content';
+import { type Lang, href, UI, waLink } from '../i18n';
+interface Props { kind: 'services' | 'principles' | 'steps' | 'areas' | 'cta'; lang: Lang; exclude?: string; }
+const { kind, lang, exclude } = Astro.props;
+const t = UI[lang];
+const ar = lang === 'ar';
+---
+{kind === 'services' && (
+  <div class="grid grid-3">
+    {SERVICES.filter((s) => s.slug !== exclude).map((s) => (
+      <article class="card svc">
+        <div class="icon-badge"><Icon name={s.icon} /></div>
+        <h3><a href={href(lang, `/services/${s.slug}/`)}>{s[lang].name}</a></h3>
+        <p class="muted">{s[lang].short}</p>
+        <div class="svc-foot">
+          <a class="svc-link" href={href(lang, `/services/${s.slug}/`)}>{t.learnMore}<Icon name="arrow" class="dir-arrow" /></a>
+          <a class="svc-wa" href={waLink(`${t.waHello}: ${s[lang].name}`)}><Icon name="whatsapp" />{t.orderThis}</a>
+        </div>
+      </article>
+    ))}
+  </div>
+)}
+
+{kind === 'principles' && (
+  <div class="grid grid-3">
+    {PRINCIPLES[lang].map((p) => (
+      <div class="principle">
+        <div class="icon-badge"><Icon name={p.icon} /></div>
+        <div><h3>{p.t}</h3><p class="muted">{p.d}</p></div>
+      </div>
+    ))}
+  </div>
+)}
+
+{kind === 'steps' && (
+  <ol class="steps">
+    {STEPS[lang].map((s, i) => (
+      <li><span class="n">{i + 1}</span><div><h3>{s.t}</h3><p>{s.d}</p></div></li>
+    ))}
+  </ol>
+)}
+
+{kind === 'areas' && (
+  <ul class="areas">
+    {AREAS.map((a) => (
+      <li><a href={href(lang, `/areas/${a.slug}/`)}><Icon name="pin" /><span><b>{a[lang].name}</b><small>{a[lang].places.slice(0, 4).join(ar ? '، ' : ', ')}</small></span></a></li>
+    ))}
+  </ul>
+)}
+
+{kind === 'cta' && (
+  <section class="cta-band">
+    <div class="container cta-inner">
+      <div>
+        <h2>{ar ? 'عندك عطل؟ صوّره وأرسله لنا' : 'Got a problem? Send us a photo'}</h2>
+        <p>{ar ? 'نرد عليك بموعد وسعر تقريبي. في الموعد.. وبالضمان.' : 'We reply with a time slot and an estimate. On time, guaranteed.'}</p>
+      </div>
+      <div class="btn-row">
+        <a class="btn btn-light" href={waLink(t.waHello)}><Icon name="whatsapp" />{t.bookWa}</a>
+        <a class="btn btn-ghost-light" href={href(lang, '/contact/') + '#request'}>{ar ? 'نموذج الطلب' : 'Request form'}</a>
+      </div>
+    </div>
+  </section>
+)}
+
+<style>
+  .svc h3 a { color: inherit; text-decoration: none; }
+  .svc h3 a:hover { text-decoration: underline; }
+  .svc-foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding-top: 6px; border-top: 1px solid var(--line); }
+  .svc-link, .svc-wa { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-weight: 600; font-size: 0.95rem; padding-block: 8px; }
+  .svc-link { color: var(--water-text); }
+  .svc-wa { color: var(--cedar); }
+  .svc-wa :global(svg),
+  .svc-link :global(svg) { width: 18px; height: 18px; }
+  :global(html[dir='rtl'] .dir-arrow) { transform: scaleX(-1); }
+
+  .principle { display: flex; gap: 16px; align-items: flex-start; padding: 6px 0; }
+  .principle h3 { margin-bottom: 4px; }
+
+  .steps { list-style: none; padding: 0; display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); counter-reset: s; }
+  .steps li { display: flex; gap: 16px; align-items: flex-start; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; }
+  .steps .n { width: 44px; height: 44px; border-radius: 50%; background: var(--cedar); color: #fff; display: grid; place-items: center; font-family: var(--f-latin); font-weight: 600; font-size: 1.2rem; flex-shrink: 0; }
+  .steps h3 { margin-bottom: 4px; }
+  .steps p { color: var(--slate); }
+
+  .areas { list-style: none; padding: 0; display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+  .areas a { display: flex; gap: 12px; align-items: flex-start; padding: 16px 18px; border: 1px solid var(--line); border-radius: 12px; background: #fff; text-decoration: none; color: var(--ink); }
+  .areas a:hover { border-color: var(--cedar); }
+  .areas :global(svg) { width: 22px; height: 22px; color: var(--water); flex-shrink: 0; margin-top: 3px; }
+  .areas span { display: flex; flex-direction: column; }
+  .areas b { color: var(--cedar); font-size: 1.08rem; }
+  .areas small { color: var(--slate); font-size: 0.9rem; }
+
+  .cta-band { background: var(--cedar); color: #e3f0e8; padding-block: 44px; }
+  .cta-inner { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+  .cta-band h2 { color: #fff; }
+  .cta-band p { margin-top: 6px; }
+</style>

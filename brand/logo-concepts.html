@@ -1,0 +1,253 @@
+<title>مسودات لوجو شلال بيروت</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Reem+Kufi:wght@600;700&family=Readex+Pro:wght@400;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#F3F6F4; --surface:#FFFFFF; --ink:#15201B; --muted:#56665E; --line:#D9E1DC; --chip:#E8EEEA;
+  --focus:#1B8CC4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1512; --surface:#16201B; --ink:#E6EEE9; --muted:#9AABA2; --line:#28352E; --chip:#1F2B25;
+    --focus:#62C0EA; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1512; --surface:#16201B; --ink:#E6EEE9; --muted:#9AABA2; --line:#28352E; --chip:#1F2B25;
+  --focus:#62C0EA; color-scheme:dark;
+}
+
+/* Brand palettes: logo colors only */
+.pal-1{
+  --lc:#17583A; --lh:#3E8E5A; --lw:#1B8CC4; --lx:#FFFFFF; --wm:#17583A; --badge:#17583A;
+  --dk:#0F2A1F; --dlc:#EEF6EF; --dlh:#58A874; --dlw:#62C0EA; --dwm:#FFFFFF;
+}
+.pal-2{
+  --lc:#0C3A52; --lh:#2F7D4F; --lw:#27A6D9; --lx:#FFFFFF; --wm:#0C3A52; --badge:#0C3A52;
+  --dk:#0A2433; --dlc:#E9F3F8; --dlh:#4FAE74; --dlw:#5CC3EE; --dwm:#FFFFFF;
+}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",Tahoma,sans-serif;font-size:16px;line-height:1.65;padding-inline:16px;padding-block:32px 64px}
+.wrap{max-width:1080px;margin-inline:auto;display:flex;flex-direction:column;gap:32px}
+h1,h2,h3{font-family:"Readex Pro","IBM Plex Sans Arabic",sans-serif;text-wrap:balance;margin:0;line-height:1.25}
+h1{font-size:clamp(1.7rem,4vw,2.4rem);font-weight:600}
+h2{font-size:1.3rem;font-weight:600}
+h3{font-size:1.15rem;font-weight:600}
+p{margin:0}
+.lead{color:var(--muted);max-width:64ch}
+header{display:flex;flex-direction:column;gap:10px}
+.eyebrow{font-family:"Readex Pro",sans-serif;font-size:.8rem;letter-spacing:.08em;color:var(--muted)}
+
+.controls{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{font:inherit;font-size:.95rem;border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:999px;padding:8px 16px;cursor:pointer;display:flex;align-items:center;gap:8px}
+.seg button[aria-pressed="true"]{border-color:var(--ink);background:var(--surface);font-weight:600}
+.seg button:focus-visible,.pick:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.sw{display:inline-flex}
+.sw i{width:14px;height:14px;border-radius:50%;display:block;margin-inline-start:-4px;border:2px solid var(--surface)}
+.sw i:first-child{margin-inline-start:0}
+
+.swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.swatch{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.swatch .c{height:56px}
+.swatch .t{padding:10px 12px;font-size:.85rem;display:flex;flex-direction:column}
+.swatch .t b{font-weight:600}
+.swatch .t code{font-family:"Readex Pro",monospace;color:var(--muted);direction:ltr;text-align:right}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,480px),1fr));gap:20px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:16px}
+.card-head{display:flex;gap:12px;align-items:center;justify-content:space-between}
+.card-head .t{display:flex;gap:10px;align-items:center}
+.card-head .k{font-family:"Readex Pro",sans-serif;font-weight:600;font-size:.85rem;background:var(--chip);border-radius:8px;padding:2px 10px;flex-shrink:0;direction:ltr}
+.badge{font-size:.8rem;font-weight:600;color:var(--muted);border:1px solid var(--line);border-radius:999px;padding:2px 10px;white-space:nowrap}
+.card p.idea{color:var(--muted);font-size:.95rem}
+
+.tile{border-radius:12px;display:flex;align-items:center;justify-content:center;gap:16px;padding:28px 18px;min-height:170px}
+.tile.light{background:#FFFFFF;border:1px solid #E3E9E5}
+.tile.dark{background:var(--dk);
+  --lc:var(--dlc); --lh:var(--dlh); --lw:var(--dlw); --lx:var(--dk); --wm:var(--dwm); --badge:#FFFFFF14}
+.tile svg.mark{width:92px;height:92px;flex-shrink:0}
+.wm{display:flex;flex-direction:column;gap:4px;color:var(--wm)}
+.wm .ar{font-family:"Reem Kufi","IBM Plex Sans Arabic",sans-serif;font-weight:700;font-size:2.15rem;line-height:1.05}
+.wm .sub{font-family:"IBM Plex Sans Arabic",sans-serif;font-size:.9rem;font-weight:500;opacity:.85}
+.wm .en{font-family:"Readex Pro",sans-serif;font-weight:600;font-size:.72rem;letter-spacing:.24em;direction:ltr;text-align:right;opacity:.8}
+
+.small{display:flex;align-items:flex-end;gap:18px;flex-wrap:wrap;padding-top:4px}
+.small figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:.75rem;color:var(--muted)}
+.fav{background:#fff;border:1px solid #E3E9E5;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.fav svg{display:block}
+.avatar{width:64px;height:64px;border-radius:50%;background:var(--dk);display:flex;align-items:center;justify-content:center;
+  --lc:var(--dlc); --lh:var(--dlh); --lw:var(--dlw); --lx:var(--dk); --badge:#FFFFFF14}
+.avatar svg{width:44px;height:44px}
+.pick{font:inherit;font-weight:600;border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:10px;padding:10px 14px;cursor:pointer;margin-inline-start:auto}
+.pick[aria-pressed="true"]{background:var(--lw);color:#fff;border-color:var(--lw)}
+
+.notes{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px}
+.notes ul{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px}
+#choice{font-weight:600}
+@media (max-width:520px){
+  .tile{flex-direction:column;text-align:center}
+  .wm .en{text-align:center}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <!-- Geometric cedar: four roof-shaped bands on a hidden trunk -->
+    <g id="cedarGeo">
+      <rect x="57" y="18" width="6" height="62" rx="1.5"/>
+      <path d="M60 14L72 18.2V24.2L60 20L48 24.2V18.2Z"/>
+      <path d="M60 27L81 34.4V41.4L60 34L39 41.4V34.4Z"/>
+      <path d="M60 40L90 50.5V58.5L60 48L30 58.5V50.5Z"/>
+      <path d="M60 53L99 66.6V75.6L60 62L21 75.6V66.6Z"/>
+    </g>
+
+    <!-- A1 · monoline: one stroke weight for cedar, waterfall and hill -->
+    <symbol id="logoA1" viewBox="0 0 120 120">
+      <g style="fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-width:5.5">
+        <g style="stroke:var(--lc)">
+          <path d="M60 14V66"/>
+          <path d="M50 30Q60 18 70 30"/>
+          <path d="M41 44Q60 26 79 44"/>
+          <path d="M32 58Q60 34 88 58"/>
+        </g>
+        <g style="stroke:var(--lw)">
+          <path d="M60 66V106"/>
+          <path d="M60 70C60 84 52 92 46 106"/>
+          <path d="M60 70C60 84 68 92 74 106"/>
+        </g>
+        <path d="M14 106H106" style="stroke:var(--lh)"/>
+      </g>
+    </symbol>
+
+    <!-- A2 · geometric solid: bands + hill + waterfall channel -->
+    <symbol id="logoA2" viewBox="0 0 120 120">
+      <path d="M8 112A52 28 0 0 1 112 112Z" style="fill:var(--lh)"/>
+      <use href="#cedarGeo" style="fill:var(--lc)"/>
+      <path d="M55 80H65L74 112H46Z" style="fill:var(--lw)"/>
+      <g style="stroke:var(--lx);stroke-width:2.2;stroke-linecap:round">
+        <path d="M57.5 86L54 106"/>
+        <path d="M62.5 86L66 106"/>
+      </g>
+    </symbol>
+
+    <!-- A3 · badge / app icon -->
+    <symbol id="logoA3" viewBox="0 0 120 120">
+      <rect x="4" y="4" width="112" height="112" rx="30" style="fill:var(--badge)"/>
+      <clipPath id="badgeClip"><rect x="4" y="4" width="112" height="112" rx="30"/></clipPath>
+      <g clip-path="url(#badgeClip)">
+        <path d="M0 120V96Q30 86 60 96T120 96V120Z" style="fill:var(--lw)"/>
+        <path d="M0 120V106Q30 96 60 106T120 106V120Z" style="fill:var(--lh)"/>
+      </g>
+      <g transform="translate(18 10) scale(.7)" style="fill:#FFFFFF">
+        <use href="#cedarGeo"/>
+      </g>
+    </symbol>
+
+    <!-- C2 · pipe cedar, cleaned up -->
+    <symbol id="logoC2" viewBox="0 0 120 120">
+      <path d="M60 4C60 4 54 11 54 14.5A6 6 0 0 0 66 14.5C66 11 60 4 60 4Z" style="fill:var(--lw)"/>
+      <g style="fill:none;stroke:var(--lc);stroke-width:6;stroke-linecap:round;stroke-linejoin:round">
+        <path d="M60 25V92"/>
+        <path d="M49 38V36Q49 30 55 30H65Q71 30 71 36V38"/>
+        <path d="M40 53V50Q40 44 46 44H74Q80 44 80 50V53"/>
+        <path d="M31 68V64Q31 58 37 58H83Q89 58 89 64V68"/>
+        <path d="M22 83V78Q22 72 28 72H92Q98 72 98 78V83"/>
+      </g>
+      <path d="M14 104q11.5-7 23 0t23 0t23 0t23 0" style="fill:none;stroke:var(--lw);stroke-width:6;stroke-linecap:round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<main class="wrap pal-1" id="stage">
+  <header>
+    <span class="eyebrow">المرحلة 0 · الهوية البصرية · الجولة 2</span>
+    <h1>مسودات لوجو شلال بيروت</h1>
+    <p class="lead">الجولة التانية: فكرة الأرزة والشلال (A) اتعادت بتصميم عصري في 3 اتجاهات. كل اتجاه ليه نظام واضح: سُمك خط واحد، أو أشكال هندسية، أو أيقونة تطبيق. ومعاهم فكرة المواسير (C) بعد تنظيفها. الاسم اتصحح: <b>شلال بيروت للأدوات الصحية وصيانتها</b>.</p>
+  </header>
+
+  <section class="controls" aria-label="لوحة الألوان">
+    <strong>لوحة الألوان</strong>
+    <div class="seg" role="group">
+      <button type="button" data-pal="1" aria-pressed="true"><span class="sw"><i style="background:#17583A"></i><i style="background:#1B8CC4"></i><i style="background:#3E8E5A"></i></span>1 · أرز وماء</button>
+      <button type="button" data-pal="2" aria-pressed="false"><span class="sw"><i style="background:#0C3A52"></i><i style="background:#27A6D9"></i><i style="background:#2F7D4F"></i></span>2 · بحر الخليج</button>
+    </div>
+  </section>
+
+  <section class="swatches" id="swatches" aria-label="ألوان اللوحة المختارة"></section>
+
+  <section class="grid" id="concepts"></section>
+
+  <section class="notes">
+    <h3>اختيارك</h3>
+    <p id="choice"></p>
+    <ul>
+      <li>كل الاتجاهات مرسومة vector على شبكة ثابتة، فتتطبع بأي مقاس: يافطة، سيارة، ملصق ضمان.</li>
+      <li>A3 معمول عشان يبقى أيقونة التطبيق وصورة الواتساب والإنستغرام، وممكن يمشي جنب A1 أو A2 كنسخة مختصرة.</li>
+      <li>بعد ما تختار، هنظبط التفاصيل الدقيقة (المسافات والزوايا وسُمك الخط)، ونجرب خطين أو تلاتة للاسم.</li>
+    </ul>
+  </section>
+</main>
+
+<script>
+(function(){
+  var stage=document.getElementById('stage');
+  var PALS={
+    '1':[['أخضر الأرز','#17583A'],['أخضر الهضبة','#3E8E5A'],['أزرق المياه','#1B8CC4'],['الخلفية الغامقة','#0F2A1F']],
+    '2':[['كحلي الخليج','#0C3A52'],['أخضر الهضبة','#2F7D4F'],['أزرق المياه','#27A6D9'],['الخلفية الغامقة','#0A2433']]
+  };
+  var CONCEPTS=[
+    {id:'A1',name:'أرزة الشلال · خط واحد',tag:'عصري وخفيف',
+     idea:'الأرزة والشلال والهضبة كلهم بنفس سُمك الخط. الجذع بينزل ويتفرع لتلات مجاري مياه. شكل نضيف ومناسب للموقع والتطبيق.'},
+    {id:'A2',name:'أرزة الشلال · هندسي',tag:'قوي وواضح',
+     idea:'الأرزة أربع طبقات هندسية زي أسطح متراصة، والهضبة نص دايرة، والشلال قناة زرقا نازلة من الجذع. أقوى واحد على اليافطة والسيارة.'},
+    {id:'A3',name:'أرزة الشلال · أيقونة',tag:'للتطبيق والبروفايل',
+     idea:'نفس الأرزة الهندسية جوه مربع بزوايا ناعمة، وتحتها موجتين مياه وهضبة. أيقونة جاهزة للموبايل والواتساب.'},
+    {id:'C2',name:'أرزة المواسير · منقّحة',tag:'الفكرة اللي عجبتك',
+     idea:'نفس فكرة C بعد ضبط المسافات: أكواع متساوية، وطبقات بفرق ثابت، ونقطة مياه وموجة واحدة.'}
+  ];
+  var current='1', picked=null;
+  function mk(id,cls){return '<svg class="'+(cls||'')+'"><use href="#logo'+id+'"/></svg>';}
+  function wordmark(){return '<div class="wm"><span class="ar">شلال بيروت</span><span class="sub">للأدوات الصحية وصيانتها</span><span class="en">SHALAL BEIRUT</span></div>';}
+  document.getElementById('concepts').innerHTML=CONCEPTS.map(function(c){
+    return '<article class="card" data-id="'+c.id+'">'+
+      '<div class="card-head"><div class="t"><span class="k">'+c.id+'</span><h2>'+c.name+'</h2></div><span class="badge">'+c.tag+'</span></div>'+
+      '<p class="idea">'+c.idea+'</p>'+
+      '<div class="tile light">'+mk(c.id,'mark')+wordmark()+'</div>'+
+      '<div class="tile dark">'+mk(c.id,'mark')+wordmark()+'</div>'+
+      '<div class="small">'+
+        '<figure><div class="fav" style="width:40px;height:40px"><svg width="32" height="32"><use href="#logo'+c.id+'"/></svg></div>32px</figure>'+
+        '<figure><div class="fav" style="width:24px;height:24px"><svg width="16" height="16"><use href="#logo'+c.id+'"/></svg></div>16px</figure>'+
+        '<figure><div class="avatar">'+mk(c.id)+'</div>بروفايل</figure>'+
+        '<button type="button" class="pick" aria-pressed="false">اختار '+c.id+'</button>'+
+      '</div></article>';
+  }).join('');
+  function renderSwatches(){
+    document.getElementById('swatches').innerHTML=PALS[current].map(function(s){
+      return '<div class="swatch"><div class="c" style="background:'+s[1]+'"></div><div class="t"><b>'+s[0]+'</b><code>'+s[1]+'</code></div></div>';
+    }).join('');
+  }
+  function renderChoice(){
+    document.getElementById('choice').textContent = picked ?
+      ('اخترت '+picked+' مع اللوحة '+current+'. ابعتلي "'+picked+' / '+current+'" في الشات وأنا أكمل عليه.') :
+      'لسه ما اخترتش. اضغط "اختار" على الاتجاه اللي عاجبك، وابعتلي الكود واللوحة في الشات.';
+  }
+  document.querySelectorAll('[data-pal]').forEach(function(b){
+    b.addEventListener('click',function(){
+      current=b.getAttribute('data-pal');
+      stage.classList.remove('pal-1','pal-2'); stage.classList.add('pal-'+current);
+      document.querySelectorAll('[data-pal]').forEach(function(x){x.setAttribute('aria-pressed', x===b?'true':'false');});
+      renderSwatches(); renderChoice();
+    });
+  });
+  document.getElementById('concepts').addEventListener('click',function(e){
+    var b=e.target.closest('.pick'); if(!b) return;
+    picked=b.closest('.card').getAttribute('data-id');
+    document.querySelectorAll('.pick').forEach(function(x){x.setAttribute('aria-pressed', x===b?'true':'false');});
+    renderChoice();
+  });
+  renderSwatches(); renderChoice();
+})();
+</script>

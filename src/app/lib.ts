@@ -43,7 +43,7 @@ export const isoToKuwaitLocal = (iso?: string | null) => {
 
 /** Kuwaiti numbers as 5512 3456, foreign ones with + and country code. */
 export const phoneDisplay = (p?: string | null) => (!p ? '' : p.startsWith('965') && p.length === 11 ? `${p.slice(3, 7)} ${p.slice(7)}` : '+' + p);
-export { parsePhone } from '../shared/phone';
+export { parsePhone, cleanPhoneInput } from '../shared/phone';
 export const telHref = (p: string) => `tel:+${p}`;
 export const waHref = (p: string, text = '') => `https://wa.me/${p}${text ? '?text=' + encodeURIComponent(text) : ''}`;
 

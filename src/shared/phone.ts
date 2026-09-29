@@ -35,6 +35,12 @@ export function parsePhone(input: unknown): PhoneResult {
   return { ok: false, error: 'الرقم غلط. اكتب 8 أرقام كويتية، أو رقم دولي يبدأ بـ + ومفتاح الدولة' };
 }
 
+/** For the username field: digits only (Arabic digits converted), a leading + allowed, no spaces or other characters. */
+export const cleanPhoneInput = (v: string) => {
+  const s = latinDigits(v);
+  return (s.trimStart().startsWith('+') ? '+' : '') + s.replace(/D/g, '').slice(0, 15);
+};
+
 /** Stored form or null (for places that only need yes/no). */
 export const normalizePhone = (input: unknown): string | null => {
   const r = parsePhone(input);

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { createContext } from 'preact';
 import { useContext } from 'preact/hooks';
-import { api, ROLE } from '../lib';
+import { api, ROLE, cleanPhoneInput } from '../lib';
 import { Icon, Mark, Loading, ErrorBox, Field, Btn, useAction } from '../ui';
 import { Dashboard } from './Dashboard';
 import { Orders, NewOrder } from './Orders';
@@ -148,7 +148,7 @@ function Login({ onDone }: { onDone: () => void }) {
         <div class="logo-head"><Mark />شلال بيروت</div>
         <h1 style="text-align:center">دخول الفريق</h1>
         <ErrorBox error={error} />
-        <Field label="رقم الموبايل"><input id="login-phone" class="input" type="tel" inputMode="tel" dir="ltr" autoComplete="username" value={phone} onInput={(e) => setPhone(e.currentTarget.value)} required /></Field>
+        <Field label="رقم الموبايل"><input id="login-phone" class="input" type="tel" inputMode="numeric" dir="ltr" autoComplete="username" placeholder="56607020" maxLength={16} value={phone} onInput={(e) => { const v = cleanPhoneInput(e.currentTarget.value); e.currentTarget.value = v; setPhone(v); }} onKeyDown={(e) => { if (e.key === ' ') e.preventDefault(); }} required /></Field>
         <Field label="كلمة السر"><input id="login-pass" class="input" type="password" autoComplete="current-password" value={password} onInput={(e) => setPassword(e.currentTarget.value)} required /></Field>
         <button class="btn primary big block" disabled={busy}>{busy ? 'لحظة…' : 'دخول'}</button>
         <p class="small muted" style="text-align:center">نسيت كلمة السر؟ كلّم المدير يسوي لك وحدة جديدة.</p>

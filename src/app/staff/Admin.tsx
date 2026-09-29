@@ -1,6 +1,6 @@
 // Manager pages: team accounts, services and price list.
 import { useState } from 'preact/hooks';
-import { api, ROLE, phoneDisplay } from '../lib';
+import { api, ROLE, phoneDisplay, cleanPhoneInput } from '../lib';
 import { useLoad, Loading, ErrorBox, Field, Btn, Modal, useAction } from '../ui';
 import { useApp } from './App';
 
@@ -76,7 +76,7 @@ function UserModal({ u, canAdmin, onClose, onDone }: any) {
     <Modal title={isNew ? 'شخص جديد في الفريق' : `تعديل ${u.name}`} onClose={onClose}>
       <ErrorBox error={error} />
       <Field label="الاسم"><input id="um-name" class="input" value={name} onInput={(e) => setName(e.currentTarget.value)} /></Field>
-      {isNew && <Field label="رقم الموبايل (هو اسم الدخول)"><input id="um-phone" class="input" type="tel" dir="ltr" value={phone} onInput={(e) => setPhone(e.currentTarget.value)} /></Field>}
+      {isNew && <Field label="رقم الموبايل (هو اسم الدخول)"><input id="um-phone" class="input" type="tel" inputMode="numeric" dir="ltr" placeholder="5xxxxxxx" maxLength={16} value={phone} onInput={(e) => { const v = cleanPhoneInput(e.currentTarget.value); e.currentTarget.value = v; setPhone(v); }} onKeyDown={(e) => { if (e.key === ' ') e.preventDefault(); }} /></Field>}
       <Field label="الدور">
         <select id="um-role" class="input" value={role} onChange={(e) => setRole(e.currentTarget.value)}>
           <option value="tech">فني</option><option value="cs">خدمة العملاء</option><option value="manager">مدير</option>{canAdmin && <option value="admin">مدير النظام</option>}

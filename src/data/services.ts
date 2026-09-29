@@ -180,7 +180,7 @@ export const SERVICES: Service[] = [
       ],
     },
     prices: [
-      { ar: 'سيل تانكي', en: 'Tank sealing', from: 25 },
+      { ar: 'سيل تانكي (عزل ضد التسريب)', en: 'Tank sealant (leak sealing)', from: 25 },
       { ar: 'تركيب عوامة تانكي', en: 'Tank float valve installation', from: 6 },
       { ar: 'إصلاح شبك تانكي', en: 'Tank connections repair', from: null },
       { ar: 'تنظيف وتعقيم خزان', en: 'Tank cleaning & disinfection', from: null },
@@ -215,7 +215,7 @@ export const SERVICES: Service[] = [
       ],
     },
     prices: [
-      { ar: 'تركيب فلتر سال', en: 'Sal filter installation', from: 5 },
+      { ar: 'تركيب فلتر سيل', en: 'Seal filter installation', from: 5 },
       { ar: 'تركيب فلتر شرب عادي', en: 'Drinking water filter installation', from: 5 },
       { ar: 'تركيب فلتر جامبو', en: 'Jumbo filter installation', from: 10 },
       { ar: 'صيانة براد مياه', en: 'Water cooler service', from: null },

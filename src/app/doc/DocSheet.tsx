@@ -95,7 +95,7 @@ export function DocSheet({ doc, forExport }: { doc: any; forExport?: 'pdf' | 'pn
           <div>
             <b>{warrantyActive ? 'الكفالة سارية' : 'الكفالة انتهت'}</b> · من {fmtDate(doc.starts_at)} لين {fmtDate(doc.ends_at)}
             {doc.covers && <div>تشمل: {doc.covers}</div>}
-            <div class="muted">إذا صار أي خلل في الشغل خلال الكفالة، طرّش لنا رقم الطلب على الواتساب ونجيك ببلاش.</div>
+            <div class="muted">إذا صار أي خلل في الشغل خلال الكفالة، طرّش لنا رقم الطلب على الواتساب ونجيك مجاناً.</div>
           </div>
         </section>
       ) : null}

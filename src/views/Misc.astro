@@ -141,7 +141,7 @@ const priceLd = kind === 'prices' ? [{
     <section class="section">
       <div class="container prose">
         <h2>{ar ? 'مدة الضمان' : 'Warranty period'}</h2>
-        <p>{ar ? 'مدة ضمان الشغل: ' : 'Workmanship warranty: '}{warrantyText ? <b>{warrantyText}</b> : <span class="ph">{ar ? '[مدة الضمان]' : '[warranty period]'}</span>}{ar ? '، وتختلف حسب نوع الخدمة وتنكتب لك بالفاتورة.' : ', depending on the service, and written on your invoice.'}</p>
+        <p>{ar ? 'مدة ضمان الشغل: ' : 'Workmanship warranty: '}{warrantyText ? <b>{warrantyText}</b> : <b>{ar ? 'حسب نوع الخدمة' : 'depends on the service'}</b>}{ar ? '، وتختلف حسب نوع الخدمة وتنكتب لك بالفاتورة.' : ', depending on the service, and written on your invoice.'}</p>
         <h2>{ar ? 'شنو يشمل الضمان' : 'What is covered'}</h2>
         <ul class="checklist">
           <li>{ar ? 'أي خلل بالشغل اللي سويناه خلال مدة الضمان، نرجع نصلحه ببلاش.' : 'Any fault in the work we did during the warranty period is fixed free of charge.'}</li>
@@ -179,7 +179,7 @@ const priceLd = kind === 'prices' ? [{
             <li><Icon name="whatsapp" /><div><b>{ar ? 'واتساب' : 'WhatsApp'}</b><a href={waLink(t.waHello)}>{SITE.whatsapp ? displayPhone(lang) : <span class="ph">{ar ? '[رقم الواتساب]' : '[WhatsApp number]'}</span>}</a></div></li>
             <li><Icon name="phone" /><div><b>{ar ? 'اتصال' : 'Phone'}</b><a href={telLink()} dir="ltr">{SITE.phone ? displayPhone(lang) : <span class="ph">{ar ? '[رقم الاتصال]' : '[Phone number]'}</span>}</a></div></li>
             <li><Icon name="mail" /><div><b>{ar ? 'الإيميل' : 'Email'}</b><a href={`mailto:${SITE.email}`}>{SITE.email}</a></div></li>
-            <li><Icon name="pin" /><div><b>{ar ? 'المحل' : 'Shop'}</b>{SITE.mapsUrl ? <a href={SITE.mapsUrl}>{ar ? SITE.shopAr : SITE.shopEn}</a> : <span>{ar ? SITE.shopAr : SITE.shopEn} <span class="ph">{ar ? '[لوكيشن جوجل ماب]' : '[Google Maps link]'}</span></span>}</div></li>
+            <li><Icon name="pin" /><div><b>{ar ? 'المحل' : 'Shop'}</b>{SITE.mapsUrl ? <a href={SITE.mapsUrl}>{ar ? SITE.shopAr : SITE.shopEn}</a> : <span>{ar ? SITE.shopAr : SITE.shopEn}</span>}</div></li>
             <li><Icon name="clock" /><div><b>{ar ? 'أوقات العمل' : 'Hours'}</b><span>{ar ? 'السبت إلى الخميس' : 'Saturday to Thursday'}, <span dir="ltr">{SITE.hours.opens}–{SITE.hours.closes}</span></span></div></li>
           </ul>
         </div>

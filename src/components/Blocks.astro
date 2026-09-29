@@ -60,7 +60,7 @@ const crumbsLd = { '@context': 'https://schema.org', '@type': 'BreadcrumbList', 
           : 'We are a new team, and we only publish real customer reviews with their permission. After every visit you receive a short survey on WhatsApp. Your feedback helps us and helps others choose.'}</p>
         {SITE.googleReviewUrl
           ? <a class="btn btn-outline" style="align-self:flex-start" href={SITE.googleReviewUrl}>{ar ? 'قيّمنا على جوجل' : 'Review us on Google'}</a>
-          : <span class="ph" style="align-self:flex-start">{ar ? '[لينك التقييم على جوجل بعد إنشاء Google Business]' : '[Google review link, once the Business Profile exists]'}</span>}
+          : null}
       </div>
     </div>
   )

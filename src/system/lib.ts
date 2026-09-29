@@ -24,14 +24,7 @@ export const addMonths = (m: number, from = new Date()) => {
   return d.toISOString();
 };
 
-/** Kuwait mobile numbers: accepts 8 local digits, 965XXXXXXXX, +965 or 00965 prefixes. */
-export function normalizePhone(input: unknown): string | null {
-  const digits = String(input ?? '').replace(/\D/g, '').replace(/^00/, '');
-  if (/^\d{8}$/.test(digits)) return '965' + digits;
-  if (/^965\d{8}$/.test(digits)) return digits;
-  if (/^\d{10,15}$/.test(digits)) return digits; // other international numbers
-  return null;
-}
+export { normalizePhone, parsePhone, searchDigits } from '../shared/phone';
 
 export const kd = (fils: number) => (fils / 1000).toFixed(3);
 export const toFils = (kdValue: unknown) => {

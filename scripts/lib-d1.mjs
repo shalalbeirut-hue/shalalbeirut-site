@@ -23,10 +23,15 @@ export function parseArgs(argv) {
   return Object.fromEntries(argv.reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1]]] : acc), []));
 }
 
+/** Kuwaiti staff numbers, same rule as src/shared/phone.ts: Arabic digits, spaces, +965/00965 and a stray 0 are fine. */
 export function kuwaitPhone(v) {
-  let p = String(v || '').replace(/\D/g, '');
-  if (/^\d{8}$/.test(p)) p = '965' + p;
-  return /^965\d{8}$/.test(p) ? p : null;
+  let p = String(v || '')
+    .replace(/[٠-٩۰-۹]/g, (d) => String((d.charCodeAt(0) & 0xf) % 10))
+    .replace(/\D/g, '')
+    .replace(/^00/, '');
+  if (p.startsWith('965') && p.length >= 11) p = p.slice(3);
+  if (/^0\d{8}$/.test(p)) p = p.slice(1);
+  return /^[24569]\d{7}$/.test(p) ? '965' + p : null;
 }
 
 export const q = (s) => `'${String(s).replace(/'/g, "''")}'`;

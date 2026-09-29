@@ -45,7 +45,9 @@ const L = ar
 </form>
 
 <script>
+  import { parsePhone, formatPhone } from '../shared/phone';
   document.querySelectorAll<HTMLFormElement>('form.request-form').forEach((form) => {
+    form.querySelector<HTMLInputElement>('[name=phone]')?.addEventListener('input', (e) => (e.currentTarget as HTMLInputElement).setCustomValidity(''));
     form.addEventListener('submit', (e) => {
       e.preventDefault();
       const ar = form.dataset.lang === 'ar';
@@ -55,11 +57,13 @@ const L = ar
       const nameEl = form.querySelector<HTMLInputElement>('[name=name]')!;
       const phoneEl = form.querySelector<HTMLInputElement>('[name=phone]')!;
       nameEl.setCustomValidity(name ? '' : ar ? 'اكتب اسمك لو سمحت' : 'Please enter your name');
-      phoneEl.setCustomValidity(/^[+\d\s-]{8,}$/.test(phone) ? '' : ar ? 'اكتب رقم موبايل صحيح لو سمحت' : 'Please enter a valid mobile number');
+      const pr = parsePhone(phone);
+      phoneEl.setCustomValidity(pr.ok ? '' : ar ? pr.error : 'Please enter a valid mobile number (8 digits, or + and country code)');
       if (!form.reportValidity()) return;
+      const mobile = pr.ok ? formatPhone(pr.phone) : phone;
       const lines = ar
-        ? ['السلام عليكم، أبي أحجز خدمة', `الاسم: ${name}`, `الموبايل: ${phone}`, `الخدمة: ${f.get('service')}`, `المحافظة: ${f.get('area')}`, `المنطقة/القطعة: ${f.get('block') || '-'}`, `الموعد المفضل: ${f.get('when')}`, `المشكلة: ${f.get('desc') || '-'}`]
-        : ['Hello, I would like to book a service', `Name: ${name}`, `Mobile: ${phone}`, `Service: ${f.get('service')}`, `Governorate: ${f.get('area')}`, `Area/block: ${f.get('block') || '-'}`, `Preferred time: ${f.get('when')}`, `Problem: ${f.get('desc') || '-'}`];
+        ? ['السلام عليكم، أبي أحجز خدمة', `الاسم: ${name}`, `الموبايل: ${mobile}`, `الخدمة: ${f.get('service')}`, `المحافظة: ${f.get('area')}`, `المنطقة/القطعة: ${f.get('block') || '-'}`, `الموعد المفضل: ${f.get('when')}`, `المشكلة: ${f.get('desc') || '-'}`]
+        : ['Hello, I would like to book a service', `Name: ${name}`, `Mobile: ${mobile}`, `Service: ${f.get('service')}`, `Governorate: ${f.get('area')}`, `Area/block: ${f.get('block') || '-'}`, `Preferred time: ${f.get('when')}`, `Problem: ${f.get('desc') || '-'}`];
       const wa = form.dataset.wa;
       if (!wa) { form.querySelector<HTMLElement>('[data-nonumber]')!.hidden = false; return; }
       window.location.href = `https://wa.me/${wa}?text=${encodeURIComponent(lines.join('\n'))}`;

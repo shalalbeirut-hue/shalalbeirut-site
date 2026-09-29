@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'preact/hooks';
-import { api, fmtDateTime, fmtTime, phoneDisplay, SOURCE, GOVERNORATES, kuwaitLocalToIso } from '../lib';
+import { api, fmtDateTime, fmtTime, phoneDisplay, SOURCE, GOVERNORATES, kuwaitLocalToIso, parsePhone } from '../lib';
 import { useLoad, Loading, ErrorBox, StatusBadge, Icon, Field, Btn, useAction, ServiceChips, AreaPicker } from '../ui';
 import { useApp } from './App';
 import { printOrders } from '../print';
@@ -178,6 +178,16 @@ function TechVisits() {
   );
 }
 
+/** Live feedback while typing a customer number. */
+function phoneHint(input: string, found: any) {
+  if (!input.trim()) return 'اكتب الرقم ونطلع لك بياناته لو مسجّل';
+  const pr = parsePhone(input);
+  if (!pr.ok) return input.replace(/\D/g, '').length < 8 ? 'كمّل الرقم…' : '⚠ ' + pr.error;
+  const saved = pr.kuwait ? `+965 ${pr.phone.slice(3, 7)} ${pr.phone.slice(7)}` : '+' + pr.phone;
+  const who = found ? `عميل مسجّل: ${found.name}` : 'عميل جديد';
+  return `${who} · يتسجّل ${saved}${pr.mobile ? '' : ' · ⚠ رقم أرضي، ما عليه واتساب'}`;
+}
+
 export function NewOrder() {
   const { go } = useApp();
   const services = useLoad(() => api('/services'));
@@ -192,9 +202,9 @@ export function NewOrder() {
   const { busy, error, run } = useAction();
 
   useEffect(() => {
-    const digits = phone.replace(/\D/g, '');
-    if (digits.length < 8) { setFound(null); return; }
-    const t = setTimeout(() => api(`/customers/by-phone/${digits}`).then((d) => {
+    const pr = parsePhone(phone);
+    if (!pr.ok) { setFound(null); return; }
+    const t = setTimeout(() => api(`/customers/by-phone/${pr.phone}`).then((d) => {
       setFound(d.customer);
       if (d.customer) { setName(d.customer.name); setAddressId(d.customer.addresses[0] ? String(d.customer.addresses[0].id) : 'new'); }
     }).catch(() => {}), 400);
@@ -228,7 +238,7 @@ export function NewOrder() {
       <div class="card stack">
         <h2>العميل</h2>
         <div class="grid2">
-          <Field label="رقم الموبايل" hint={found ? `عميل مسجّل: ${found.name}` : phone.replace(/\D/g, '').length >= 8 ? 'عميل جديد' : 'اكتب الرقم ونطلع لك بياناته لو مسجّل'}>
+          <Field label="رقم الموبايل" hint={phoneHint(phone, found)}>
             <input id="no-phone" class="input" type="tel" dir="ltr" inputMode="tel" value={phone} onInput={(e) => setPhone(e.currentTarget.value)} required />
           </Field>
           <Field label="الاسم"><input id="no-name" class="input" value={name} onInput={(e) => setName(e.currentTarget.value)} disabled={!!found} required /></Field>

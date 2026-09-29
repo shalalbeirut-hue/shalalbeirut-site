@@ -8,6 +8,8 @@ export function Team() {
   const { user } = useApp();
   const { data, error, loading, reload } = useLoad(() => api('/users'));
   const [edit, setEdit] = useState<any | null>(null);
+  const [pw, setPw] = useState<any | null>(null);
+  const [done, setDone] = useState<string | null>(null);
   return (
     <div>
       <div class="page-head"><h1>الفريق</h1><Btn variant="primary" icon="plus" onClick={() => setEdit({})}>أضف شخص</Btn></div>
@@ -16,12 +18,44 @@ export function Team() {
         <div class="list">{data.users.map((u: any) => (
           <div class="item">
             <div class="top"><span class="title">{u.name}</span><span class="row" style="gap:6px"><span class="badge t-info">{ROLE[u.role]}</span>{!u.active && <span class="badge t-muted">موقوف</span>}</span></div>
-            <div class="row between"><span class="small num">{phoneDisplay(u.phone)}</span>{(u.role !== 'admin' || user.role === 'admin') && <Btn variant="sm" onClick={() => setEdit(u)}>تعديل</Btn>}</div>
+            <div class="row between"><span class="small num">{phoneDisplay(u.phone)}</span>
+              {(u.role !== 'admin' || user.role === 'admin') && (
+                <span class="row" style="gap:6px">
+                  {u.id === user.id
+                    ? <a class="btn sm" href="/app/password/">تغيير كلمة المرور</a>
+                    : <Btn variant="sm" icon="key" onClick={() => setPw(u)}>تغيير كلمة المرور</Btn>}
+                  <Btn variant="sm" onClick={() => setEdit(u)}>تعديل</Btn>
+                </span>
+              )}
+            </div>
           </div>
         ))}</div>
       )}
+      {done && <div class="ok" style="margin-block:10px">{done}</div>}
+      {pw && <PasswordModal u={pw} onClose={() => setPw(null)} onDone={() => { setDone(`تم تغيير كلمة المرور لـ ${pw.name}. عطه الكلمة الجديدة بنفسك، وبيطلب منه يغيّرها أول ما يدخل.`); setPw(null); }} />}
       {edit && <UserModal u={edit} canAdmin={user.role === 'admin'} onClose={() => setEdit(null)} onDone={() => { setEdit(null); reload(); }} />}
     </div>
+  );
+}
+
+/** Sets a new temporary password for someone on the team. */
+function PasswordModal({ u, onClose, onDone }: any) {
+  const [p1, setP1] = useState('');
+  const [p2, setP2] = useState('');
+  const { busy, error, setError, run } = useAction();
+  const save = () => {
+    if (p1.length < 8) return setError('كلمة المرور لازم تكون 8 حروف أو أرقام على الأقل');
+    if (p1 !== p2) return setError('كلمة المرور مو نفسها في الخانتين');
+    run(async () => { await api(`/users/${u.id}`, { method: 'PATCH', body: { password: p1 } }); onDone(); });
+  };
+  return (
+    <Modal title={`تغيير كلمة المرور: ${u.name}`} onClose={onClose}>
+      <p class="muted small">بيطلع من كل الأجهزة، وأول ما يدخل بالكلمة الجديدة بيطلب منه يختار كلمة خاصة فيه.</p>
+      <ErrorBox error={error} />
+      <Field label="كلمة المرور الجديدة (مؤقتة)"><input id="pw-new" class="input" type="password" autoComplete="new-password" minLength={8} value={p1} onInput={(e) => setP1(e.currentTarget.value)} /></Field>
+      <Field label="أكّد كلمة المرور"><input id="pw-new2" class="input" type="password" autoComplete="new-password" minLength={8} value={p2} onInput={(e) => setP2(e.currentTarget.value)} /></Field>
+      <Btn variant="primary" icon="key" busy={busy} onClick={save}>غيّر كلمة المرور</Btn>
+    </Modal>
   );
 }
 

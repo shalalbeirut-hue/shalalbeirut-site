@@ -2,7 +2,7 @@
 import { Hono } from 'hono';
 import {
   type Env, type Vars, type C, type StaffUser,
-  nowIso, addHours, addMonths, normalizePhone, kd, toFils, randomToken, sha256, nextCounter,
+  nowIso, addHours, addMonths, normalizePhone, parsePhone, searchDigits, kd, toFils, randomToken, sha256, nextCounter,
   logActivity, notify, emit, siteUrl, waLink, HttpError, bad, notFound, forbidden, str, int,
 } from './lib';
 import {
@@ -37,7 +37,9 @@ const STATUS_AR: Record<string, string> = {
 
 api.post('/auth/login', async (c) => {
   const b = await body(c);
-  const phone = normalizePhone(b.phone);
+  // Same rule as everywhere; the raw digits are a fallback for older or demo accounts stored before the rule.
+  const raw = searchDigits(String(b.phone ?? ''));
+  const phone = normalizePhone(b.phone) ?? (raw.length === 8 ? '965' + raw : raw || null);
   if (!phone || !b.password) throw bad('اكتب رقم الموبايل وكلمة السر');
   await rateLimit(c.env, 'ip:' + ip(c), 20, 15);
   await rateLimit(c.env, 'staff:' + phone, 6, 15);
@@ -81,9 +83,12 @@ api.get('/users', requireStaff(...OFFICE), async (c) => {
 api.post('/users', requireStaff(...MANAGERS), async (c) => {
   const b = await body(c);
   const name = str(b.name, 80);
-  const phone = normalizePhone(b.phone);
+  const pr = parsePhone(b.phone);
   const role = String(b.role);
-  if (!name || !phone) throw bad('الاسم والرقم مطلوبين');
+  if (!name) throw bad('الاسم مطلوب');
+  if (!pr.ok) throw bad(pr.error);
+  if (!pr.kuwait) throw bad('حسابات الفريق لازم تكون بأرقام كويتية');
+  const phone = pr.phone;
   if (!['manager', 'cs', 'tech', 'admin'].includes(role)) throw bad('الدور غلط');
   if (role === 'admin' && me(c).role !== 'admin') throw forbidden();
   const err = validatePassword(b.password);
@@ -172,7 +177,7 @@ api.patch('/price-items/:id', requireStaff(...MANAGERS), async (c) => {
 
 api.get('/customers', requireStaff(...OFFICE), async (c) => {
   const q = str(c.req.query('q'), 60);
-  const digits = q?.replace(/\D/g, '');
+  const digits = q ? searchDigits(q) : '';
   const rows = await c.env.DB.prepare(
     `SELECT c.*, (SELECT COUNT(*) FROM orders o WHERE o.customer_id = c.id) AS orders_count
      FROM customers c ${q ? 'WHERE c.name LIKE ?1 OR c.phone LIKE ?2' : ''} ORDER BY c.id DESC LIMIT 50`,
@@ -206,9 +211,10 @@ api.get('/customers/:id', requireStaff(...OFFICE), async (c) => {
 
 async function upsertCustomer(c: C, b: Record<string, any>): Promise<number> {
   if (int(b.id)) return int(b.id)!;
-  const phone = normalizePhone(b.phone);
+  const pr = parsePhone(b.phone);
   const name = str(b.name, 80);
-  if (!phone) throw bad('رقم موبايل العميل غلط');
+  if (!pr.ok) throw bad(pr.error);
+  const phone = pr.phone;
   const existing = await c.env.DB.prepare('SELECT id FROM customers WHERE phone = ?1').bind(phone).first<{ id: number }>();
   if (existing) return existing.id;
   if (!name) throw bad('اسم العميل مطلوب');
@@ -236,8 +242,9 @@ api.post('/customers', requireStaff(...OFFICE), async (c) => {
 
 api.patch('/customers/:id', requireStaff(...OFFICE), async (c) => {
   const b = await body(c);
-  const phone = b.phone !== undefined ? normalizePhone(b.phone) : undefined;
-  if (b.phone !== undefined && !phone) throw bad('رقم الموبايل غلط');
+  const pr = b.phone !== undefined ? parsePhone(b.phone) : undefined;
+  if (pr && !pr.ok) throw bad(pr.error);
+  const phone = pr?.ok ? pr.phone : undefined;
   await c.env.DB.prepare('UPDATE customers SET name = COALESCE(?1, name), phone = COALESCE(?2, phone), phone2 = COALESCE(?3, phone2), notes = COALESCE(?4, notes) WHERE id = ?5')
     .bind(str(b.name, 80), phone ?? null, normalizePhone(b.phone2), str(b.notes, 500), int(c.req.param('id'))).run();
   return c.json({ ok: true });
@@ -299,12 +306,16 @@ function orderFilters(c: C) {
   if (int(c.req.query('tech'))) add('o.tech_id = ?', int(c.req.query('tech')));
   if (c.req.query('unassigned')) where.push('o.tech_id IS NULL');
   const q = qv('q');
-  if (q) add('(o.code LIKE ? OR c.name LIKE ? OR c.phone LIKE ?)', `%${q}%`);
+  if (q) {
+    const qd = searchDigits(q);
+    args.push(`%${q}%`, `%${qd.length >= 4 ? qd : q}%`);
+    where.push(`(o.code LIKE ?${args.length - 1} OR c.name LIKE ?${args.length - 1} OR c.phone LIKE ?${args.length})`);
+  }
   const code = qv('code', 30);
   if (code) add('o.code LIKE ?', `%${code}%`);
   const customer = qv('customer');
   if (customer) add('c.name LIKE ?', `%${customer}%`);
-  const phone = qv('phone', 20)?.replace(/\D/g, '');
+  const phone = searchDigits(qv('phone', 30) ?? '');
   if (phone) add('(c.phone LIKE ? OR c.phone2 LIKE ?)', `%${phone}%`);
   const gov = qv('gov', 40);
   if (gov) add('a.governorate = ?', gov);
@@ -1081,8 +1092,10 @@ api.post('/public/request', async (c) => {
   const b = await body(c);
   await rateLimit(c.env, 'web:' + ip(c), 5, 60);
   if (str(b.website)) return c.json({ ok: true }); // honeypot
-  const phone = normalizePhone(b.phone);
-  if (!phone || !str(b.name)) throw bad('اكتب اسمك ورقم موبايلك');
+  const pr = parsePhone(b.phone);
+  if (!str(b.name)) throw bad('اكتب اسمك');
+  if (!pr.ok) throw bad(pr.error);
+  const phone = pr.phone;
   const slugs = (Array.isArray(b.service_slugs) ? b.service_slugs : [b.service_slug]).map((v: unknown) => str(v, 60)).filter((v: string | null): v is string => !!v).slice(0, 10);
   const svcRows = slugs.length
     ? (await c.env.DB.prepare(`SELECT id FROM services WHERE slug IN (${slugs.map((_: string, i: number) => '?' + (i + 1)).join(',')})`).bind(...slugs).all<{ id: number }>()).results

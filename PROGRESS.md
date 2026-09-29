@@ -1,8 +1,10 @@
 # متابعة تقدم مشروع شلال بيروت للأدوات الصحية وصيانتها
 
-آخر تحديث: 2026-09-28
+آخر تحديث: 2026-09-29
 
-- **معاينة الموقع (مش مأرشفة في جوجل):** https://shalalbeirut-preview.shalalbeirut.workers.dev
+- **🚀 الموقع منشور:** https://shalalbeirut.com (من 2026-09-29)
+- **السيستم:** https://shalalbeirut.com/app/
+- **معاينة للتجربة (فيها بيانات ديمو):** https://shalalbeirut-preview.shalalbeirut.workers.dev
 - **دليل الهوية:** https://claude.ai/artifact/DxWe89iaZUuGVdzUgHH3AX (نسخة في `brand/guidelines.html`).
 - **مسودات اللوجو:** https://claude.ai/artifact/VVDVA1cJNdktknvpHbrrUX (نسخة في `brand/logo-concepts.html`).
 
@@ -32,8 +34,11 @@
   - [x] تحويل www ← الدومين الأساسي، و noindex على المعاينة.
   - [x] نموذج الطلب بيفتح الواتساب برسالة جاهزة.
   - [x] الأيقونات وصور المشاركة (OG) من اللوجو.
-  - [ ] ملء البيانات الناقصة (الأرقام، الأسعار، الضمان، السوشيال، لوكيشن المحل).
-  - [ ] الإطلاق على shalalbeirut.com + Search Console + Google Business.
+  - [x] الأسعار من ملف اسعار الصيانة + رقم الواتساب والاتصال (96656652).
+  - [x] **الإطلاق على shalalbeirut.com** (2026-09-29).
+  - [ ] حساب المدير على النسخة النهائية.
+  - [ ] Google Search Console + Google Business Profile.
+  - [ ] باقي البيانات: السوشيال، لوكيشن المحل، مدة الضمان الثابتة (لو فيه).
 - [ ] **المرحلة 0 (باقي):** الفلاير الجديد، قوالب السوشيال، شهادة الضمان.
 
 ## 🔄 المرحلة 2: سيستم التشغيل (`/app`)، على فرع `site-v1`

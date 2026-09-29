@@ -13,7 +13,7 @@ const ar = lang === 'ar';
 {kind === 'services' && (
   <div class="svc-grid">
     {SERVICES.filter((s) => s.slug !== exclude).map((s) => {
-      const from = s.prices.map((p) => p.from).filter((v): v is number => v != null);
+      const from = s.prices.map((p) => p.from).filter((v): v is number => v != null && v > 0);
       const min = from.length ? Math.min(...from) : null;
       return (
         <article class="svc">

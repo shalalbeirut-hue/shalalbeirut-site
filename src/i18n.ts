@@ -16,6 +16,10 @@ export const telLink = () => (SITE.phone ? `tel:+${SITE.phone}` : '#request');
 export const displayPhone = (lang: Lang) =>
   SITE.phone ? '+' + SITE.phone.replace(/^(\d{3})(\d{4})(\d+)$/, '$1 $2 $3') : lang === 'ar' ? '[رقم الاتصال]' : '[Phone number]';
 
+/** Price label for the website: 0 is free, null is priced after inspection. */
+export const priceLabel = (lang: Lang, from: number | null) =>
+  from === 0 ? UI[lang].free : from != null ? `${from.toFixed(3)} ${UI[lang].kd}` : UI[lang].priceOnVisit;
+
 export const UI = {
   ar: {
     siteName: SITE.nameAr,
@@ -30,6 +34,7 @@ export const UI = {
     fromPrice: 'يبدأ من',
     kd: 'د.ك',
     priceOnVisit: 'بعد المعاينة',
+    free: 'ببلاش',
     offer: 'عرض الافتتاح: الكشف ببلاش طول الشهر الأول',
     trust: ['ضمان مكتوب', 'السعر قبل الشغل', 'قطع أصلية من محلنا'],
     waHello: 'السلام عليكم، أبي أحجز خدمة',
@@ -50,6 +55,7 @@ export const UI = {
     fromPrice: 'From',
     kd: 'KD',
     priceOnVisit: 'After inspection',
+    free: 'Free',
     offer: 'Opening offer: free inspection for the whole first month',
     trust: ['Written warranty', 'Price before work', 'Genuine parts from our shop'],
     waHello: 'Hello, I would like to book a service',

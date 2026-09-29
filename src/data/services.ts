@@ -44,8 +44,8 @@ export const SERVICES: Service[] = [
       ],
     },
     prices: [
-      { ar: 'كشف تسربات (شقة / بيت)', en: 'Leak inspection (flat / house)', from: null },
-      { ar: 'إصلاح تسريب ماسورة', en: 'Pipe leak repair', from: null },
+      { ar: 'الكشف عن المشكلة', en: 'Inspection', from: 0 },
+      { ar: 'إصلاح تسريب بايبات', en: 'Pipe leak repair', from: null },
     ],
   },
   {
@@ -78,7 +78,7 @@ export const SERVICES: Service[] = [
     prices: [
       { ar: 'تسليك مغسلة أو مطبخ', en: 'Sink or kitchen drain', from: null },
       { ar: 'تسليك كرسي حمام', en: 'Toilet unclogging', from: null },
-      { ar: 'تسليك خط رئيسي', en: 'Main line unclogging', from: null },
+      { ar: 'تسليك مجاري رئيسية', en: 'Main drain unclogging', from: null },
     ],
   },
   {
@@ -109,8 +109,11 @@ export const SERVICES: Service[] = [
       ],
     },
     prices: [
+      { ar: 'تركيب خط مغسلة', en: 'Basin line installation', from: 5 },
+      { ar: 'تركيب خط شاور', en: 'Shower line installation', from: 6 },
+      { ar: 'تمديد حمام تغذية', en: 'Bathroom supply pipework', from: 35 },
+      { ar: 'تمديد حمام صرف', en: 'Bathroom drainage pipework', from: 30 },
       { ar: 'تبديل محبس', en: 'Valve replacement', from: null },
-      { ar: 'تمديدات (حسب المتر)', en: 'Pipework (per metre)', from: null },
     ],
   },
   {
@@ -141,9 +144,12 @@ export const SERVICES: Service[] = [
       ],
     },
     prices: [
+      { ar: 'تركيب سخان رأسي', en: 'Vertical heater installation', from: 8 },
+      { ar: 'تركيب سخان أفقي', en: 'Horizontal heater installation', from: 10 },
+      { ar: 'صيانة سيستم مركزي', en: 'Central system service', from: 20 },
+      { ar: 'تجميع شبك سيستم مركزي', en: 'Central system network assembly', from: 30 },
       { ar: 'تبديل هيتر', en: 'Element replacement', from: null },
       { ar: 'تبديل ثرموستات', en: 'Thermostat replacement', from: null },
-      { ar: 'تركيب سخان (بدون السخان)', en: 'Heater installation (labour)', from: null },
     ],
   },
   {
@@ -174,16 +180,18 @@ export const SERVICES: Service[] = [
       ],
     },
     prices: [
+      { ar: 'سيل تانكي', en: 'Tank sealing', from: 25 },
+      { ar: 'تركيب عوامة تانكي', en: 'Tank float valve installation', from: 6 },
+      { ar: 'إصلاح شبك تانكي', en: 'Tank connections repair', from: null },
       { ar: 'تنظيف وتعقيم خزان', en: 'Tank cleaning & disinfection', from: null },
       { ar: 'تصليح مضخة', en: 'Pump repair', from: null },
-      { ar: 'تبديل عوامة', en: 'Float valve replacement', from: null },
     ],
   },
   {
     slug: 'water-coolers',
     icon: 'cooler',
     ar: {
-      name: 'برادات ومبردات المياه',
+      name: 'فلاتر وبرادات المياه',
       short: 'نصون برادات الماي ومبردات الخزانات.',
       title: 'تصليح برادات ومبردات المياه بالكويت | شلال بيروت',
       desc: 'صيانة وتصليح برادات المياه ومبردات الخزانات للبيوت والمكاتب والمساجد، بقطع أصلية وضمان.',
@@ -195,7 +203,7 @@ export const SERVICES: Service[] = [
       ],
     },
     en: {
-      name: 'Water coolers',
+      name: 'Water filters & coolers',
       short: 'Servicing water dispensers and tank coolers.',
       title: 'Water Cooler & Tank Chiller Repair in Kuwait | Shalal Beirut',
       desc: 'Servicing and repairing water coolers and tank chillers for homes, offices and mosques, with genuine parts and a warranty.',
@@ -207,6 +215,9 @@ export const SERVICES: Service[] = [
       ],
     },
     prices: [
+      { ar: 'تركيب فلتر سال', en: 'Sal filter installation', from: 5 },
+      { ar: 'تركيب فلتر شرب عادي', en: 'Drinking water filter installation', from: 5 },
+      { ar: 'تركيب فلتر جامبو', en: 'Jumbo filter installation', from: 10 },
       { ar: 'صيانة براد مياه', en: 'Water cooler service', from: null },
       { ar: 'تصليح مبرد خزان', en: 'Tank chiller repair', from: null },
     ],

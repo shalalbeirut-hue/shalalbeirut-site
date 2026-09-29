@@ -8,7 +8,7 @@ import RequestForm from '../components/RequestForm.astro';
 import { SITE } from '../config';
 import { SERVICES } from '../data/services';
 import { CONTRACTS, FAQ } from '../data/content';
-import { type Lang, href, UI, waLink, telLink, displayPhone } from '../i18n';
+import { type Lang, href, UI, waLink, telLink, displayPhone, priceLabel } from '../i18n';
 
 type Kind = 'services' | 'areas' | 'prices' | 'reviews' | 'contracts' | 'warranty' | 'about' | 'contact' | '404';
 interface Props { lang: Lang; kind: Kind; }
@@ -116,7 +116,7 @@ const priceLd = kind === 'prices' ? [{
             <div class="table-wrap">
               <table class="prices">
                 <thead><tr><th scope="col">{ar ? 'الخدمة' : 'Job'}</th><th scope="col" class="num">{t.fromPrice}</th></tr></thead>
-                <tbody>{s.prices.map((p) => <tr><td>{p[lang]}</td><td class="num">{p.from != null ? `${p.from} ${t.kd}` : <span class="ph">{t.priceOnVisit}</span>}</td></tr>)}</tbody>
+                <tbody>{s.prices.map((p) => <tr><td>{p[lang]}</td><td class="num">{priceLabel(lang, p.from)}</td></tr>)}</tbody>
               </table>
             </div>
           </div>

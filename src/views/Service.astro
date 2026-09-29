@@ -7,7 +7,7 @@ import RequestForm from '../components/RequestForm.astro';
 import { SITE } from '../config';
 import { serviceBySlug } from '../data/services';
 import { AREAS } from '../data/areas';
-import { type Lang, href, UI, waLink, telLink } from '../i18n';
+import { type Lang, href, UI, waLink, telLink, priceLabel } from '../i18n';
 interface Props { lang: Lang; slug: string; }
 const { lang, slug } = Astro.props;
 const s = serviceBySlug(slug);
@@ -65,7 +65,7 @@ const serviceLd = {
       <div class="table-wrap">
         <table class="prices">
           <thead><tr><th scope="col">{ar ? 'الخدمة' : 'Job'}</th><th scope="col" class="num">{t.fromPrice}</th></tr></thead>
-          <tbody>{s.prices.map((p) => <tr><td>{p[lang]}</td><td class="num">{p.from != null ? `${p.from} ${t.kd}` : <span class="ph">{t.priceOnVisit}</span>}</td></tr>)}</tbody>
+          <tbody>{s.prices.map((p) => <tr><td>{p[lang]}</td><td class="num">{priceLabel(lang, p.from)}</td></tr>)}</tbody>
         </table>
       </div>
     </div>

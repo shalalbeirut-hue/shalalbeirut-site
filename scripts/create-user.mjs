@@ -1,7 +1,9 @@
 // Creates a staff account directly in the database (use it for the first admin).
 // The password is asked for on the terminal, hidden while typing, and never written to disk (only its hash is).
 //
-//   node scripts/create-user.mjs --env dev|preview|production --name "Name" --phone 5xxxxxxx --role admin
+//   node scripts/create-user.mjs --env production --phone 56607020 --role admin      (name defaults to "Admin")
+//   node scripts/create-user.mjs --env dev|preview|production --name "Name" --phone 5xxxxxxx --role admin|manager|cs|tech
+//   Forgot a password? node scripts/reset-password.mjs --env production --phone 56607020
 //
 import { webcrypto as crypto } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -13,7 +15,7 @@ import { join } from 'node:path';
 const args = Object.fromEntries(process.argv.slice(2).reduce((acc, a, i, all) => (a.startsWith('--') ? [...acc, [a.slice(2), all[i + 1]]] : acc), []));
 const env = args.env || 'dev';
 const role = args.role || 'admin';
-const name = args.name;
+const name = args.name || (role === 'admin' ? 'Admin' : undefined);
 let phone = String(args.phone || '').replace(/\D/g, '');
 if (/^\d{8}$/.test(phone)) phone = '965' + phone;
 if (!name || !/^965\d{8}$/.test(phone) || !['admin', 'manager', 'cs', 'tech'].includes(role)) {

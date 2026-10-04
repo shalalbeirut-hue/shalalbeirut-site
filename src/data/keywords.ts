@@ -13,7 +13,7 @@ const AR: Group[] = [
   {
     title: 'فني صحي وسباك',
     items: [
-      ...g('/services/', ['فني صحي', 'فنى صحى', 'صحي', 'فني صحي الكويت', 'افضل فني صحي', 'فني صحي شاطر', 'معلم صحي', 'فني صحي عربي', 'صحي عربي', 'فني صحي ٢٤ ساعة', 'فني صحي طوارئ', 'فني صحي متنقل', 'فني صحي قريب مني', 'فني صحي رخيص', 'رقم فني صحي', 'فني صحي واتساب', 'صيانة صحية', 'صيانه صحيه', 'اعمال صحية', 'شركة صيانة صحية', 'مقاول صحي']),
+      ...g('/services/', ['فني صحي', 'فنى صحى', 'صحي', 'فني صحي الكويت', 'افضل فني صحي', 'فني صحي شاطر', 'معلم صحي', 'فني صحي عربي', 'فني صحي ٢٤ ساعة', 'فني صحي طوارئ', 'فني صحي متنقل', 'فني صحي قريب مني', 'فني صحي رخيص', 'رقم فني صحي', 'فني صحي واتساب', 'صيانة صحية', 'صيانه صحيه', 'اعمال صحية', 'شركة صيانة صحية', 'مقاول صحي']),
       ...g(s('plumbing'), ['سباك', 'سباكة', 'سباكه', 'سباك الكويت', 'سباك عربي', 'سباك قريب مني', 'سباك طوارئ', 'سباك ٢٤ ساعة', 'معلم سباكة', 'اعمال سباكة', 'خدمات السباكة', 'صيانة سباكة']),
     ],
   },
@@ -44,6 +44,15 @@ const AR: Group[] = [
   {
     title: 'برادات وفلاتر',
     items: g(s('water-coolers'), ['برادات ماي', 'برادات مياه', 'برادة ماي', 'تصليح برادة', 'فلاتر مياه', 'فلتر ماي', 'فلتر سيل', 'تركيب فلتر', 'تبديل فلاتر', 'فلتر مطبخ', 'فلتر سنترال', 'ماي شرب']),
+  },
+  {
+    title: 'ماركات نركّبها ونصلّحها',
+    items: [
+      ...g(s('plumbing'), ['مواسير عدساني', 'بايبات عدساني', 'عدساني', 'مواسير PPR', 'بايبات']),
+      ...g(s('sanitary-ware'), ['خلاطات جروهي', 'جروهي', 'هانزجروهي', 'ايديال ستاندرد', 'روكا', 'ديورافيت', 'كوهلر', 'توتو', 'رأس الخيمة للسيراميك', 'جيبرت سيفون مخفي']),
+      ...g(s('water-heaters'), ['سخان اريستون', 'سخان فيرولي', 'سخان ريم', 'سخان سوبر جنرال']),
+      ...g(s('tanks-pumps'), ['مضخة بيدرولو', 'مضخة جراندفوس', 'مضخة لوارا', 'مضخة داب', 'مضخة ويلو']),
+    ],
   },
   {
     title: 'شركات وعماير',
@@ -93,6 +102,15 @@ const EN: Group[] = [
   {
     title: 'Coolers & filters',
     items: g(s('water-coolers'), ['Water coolers', 'Water cooler repair', 'Water filters', 'Water filter installation', 'Filter replacement', 'Drinking water filter', 'Central water filter']),
+  },
+  {
+    title: 'Brands we install & service',
+    items: [
+      ...g(s('plumbing'), ['Adsani pipes', 'PPR pipes Kuwait']),
+      ...g(s('sanitary-ware'), ['Grohe', 'Grohe mixers', 'Hansgrohe', 'Ideal Standard', 'Roca', 'Duravit', 'Kohler', 'TOTO', 'RAK Ceramics', 'Geberit concealed cistern']),
+      ...g(s('water-heaters'), ['Ariston water heater', 'Ferroli water heater', 'Rheem water heater', 'Super General water heater']),
+      ...g(s('tanks-pumps'), ['Pedrollo pump', 'Grundfos pump', 'Lowara pump', 'DAB pump', 'Wilo pump']),
+    ],
   },
   {
     title: 'Business & pricing',

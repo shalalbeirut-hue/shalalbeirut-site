@@ -9,6 +9,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import MobileBar from '../components/MobileBar.astro';
 import { SITE } from '../config';
+import { keywordList } from '../data/keywords';
 import { type Lang, href, dir, UI } from '../i18n';
 
 interface Props {
@@ -43,7 +44,8 @@ const business = {
   openingHoursSpecification: [{ '@type': 'OpeningHoursSpecification', dayOfWeek: ['Saturday', 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday'], opens: SITE.hours.opens, closes: SITE.hours.closes }],
   sameAs: Object.values(SITE.social).filter(Boolean),
 };
-const blocks = [business, ...jsonld];
+const keywords = keywordList(lang);
+const blocks = [{ ...business, keywords: keywords.join(', '), knowsAbout: keywords.slice(0, 25) }, ...jsonld];
 ---
 <!doctype html>
 <html lang={lang} dir={dir(lang)}>
@@ -52,6 +54,7 @@ const blocks = [business, ...jsonld];
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={desc} />
+    <meta name="keywords" content={keywords.join(', ')} />
     <link rel="canonical" href={canonical} />
     <link rel="alternate" hreflang="ar-KW" href={alt.ar} />
     <link rel="alternate" hreflang="en-KW" href={alt.en} />

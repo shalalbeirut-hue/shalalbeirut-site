@@ -136,7 +136,7 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
 
   <section class="section searches" aria-labelledby="searches-h">
     <div class="container">
-      <h2 id="searches-h" class="searches-h">{ar ? 'يدوّرون علينا بـ' : 'People find us by searching'}</h2>
+      <details class="kw-box"><summary><h2 id="searches-h" class="searches-h">{ar ? 'يدوّرون علينا بـ' : 'People find us by searching'}</h2></summary>
       <div class="kw-groups">
         {[...KEYWORD_GROUPS[lang], ...AREA_KEYWORDS(lang)].map((grp) => (
           <div class="kw-group"><h3>{grp.title}</h3><ul class="kw">{grp.items.map((k) => <li><a href={href(lang, k.to)}>{k.t}</a></li>)}</ul></div>
@@ -147,6 +147,7 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
           <div class="kw-group"><h3>{grp.title}</h3><ul class="kw">{grp.items.map((k) => <li><a href={href(ar ? 'en' : 'ar', k.to)}>{k.t}</a></li>)}</ul></div>
         ))}
       </div>
+      </details>
     </div>
   </section>
 
@@ -182,8 +183,13 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
   .on-dark li::before { background-color: rgba(255, 255, 255, 0.12); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239CD6F2' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 12l4 4 8-8'/%3E%3C/svg%3E"); }
   .on-dark { color: #e6efe9; }
 
-  .searches { padding-block: 28px 36px; }
-  .searches-h { font-size: 1rem; color: var(--slate); margin-bottom: 14px; }
+  .searches { padding-block: 18px 24px; }
+  .kw-box summary { cursor: pointer; list-style: none; display: inline-flex; align-items: center; gap: 6px; }
+  .kw-box summary::-webkit-details-marker { display: none; }
+  .kw-box summary::after { content: "+"; color: var(--slate); font-weight: 700; }
+  .kw-box[open] summary::after { content: "−"; }
+  .kw-box[open] summary { margin-bottom: 14px; }
+  .searches-h { font-size: 0.9rem; color: var(--slate); margin: 0; display: inline; }
   .kw-groups { display: grid; gap: 14px 28px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
   .kw-alt { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
   .kw-group h3 { font-size: 0.85rem; color: var(--cedar); margin-bottom: 6px; }

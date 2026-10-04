@@ -43,7 +43,7 @@ const AR: Group[] = [
   },
   {
     title: 'برادات وفلاتر',
-    items: g(s('water-coolers'), ['برادات ماي', 'برادات مياه', 'برادة ماي', 'تصليح برادة', 'فلاتر مياه', 'فلتر ماي', 'فلتر سيل', 'تركيب فلتر', 'تبديل فلاتر', 'فلتر مطبخ', 'فلتر سنترال', 'ماي شرب']),
+    items: g(s('water-coolers'), ['برادات ماي', 'برادات مياه', 'برادة ماي', 'برادة مياه', 'برادات ماي حار بارد', 'برادة مكتب', 'برادة مسجد', 'برادات ستانلس', 'تصليح برادة', 'تصليح برادات ماي', 'صيانة برادات ماي', 'برادة ما تبرد', 'برادة تهرب', 'فلاتر ماي', 'فلاتر مياه', 'فلاتر مياه الشرب', 'فلتر ماي', 'فلتر ٧ مراحل', 'فلتر تحلية', 'فلتر RO', 'شمعات فلتر', 'تبديل شمعات الفلتر', 'فلتر خزان', 'فلتر شاور', 'فلتر برادة', 'فلتر سيل', 'تركيب فلتر', 'تبديل فلاتر', 'فلتر مطبخ', 'فلتر سنترال', 'ماي شرب']),
   },
   {
     title: 'ماركات نركّبها ونصلّحها',
@@ -101,7 +101,7 @@ const EN: Group[] = [
   },
   {
     title: 'Coolers & filters',
-    items: g(s('water-coolers'), ['Water coolers', 'Water cooler repair', 'Water filters', 'Water filter installation', 'Filter replacement', 'Drinking water filter', 'Central water filter']),
+    items: g(s('water-coolers'), ['Water coolers', 'Water dispenser', 'Hot and cold water cooler', 'Office water cooler', 'Water cooler repair', 'Water cooler maintenance', 'Water filters', 'RO water filter', '7 stage water filter', 'Filter cartridges', 'Shower filter', 'Water filter installation', 'Filter replacement', 'Drinking water filter', 'Central water filter']),
   },
   {
     title: 'Brands we install & service',

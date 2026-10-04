@@ -23,7 +23,7 @@ const AR: Group[] = [
   },
   {
     title: 'مجاري وبلاليع',
-    items: g(s('drain-cleaning'), ['تسليك مجاري', 'تسليك مجارى', 'تسليك بلاعات', 'تسليك بلاليع', 'بلاعة', 'بلوعة', 'انسداد المجاري', 'تسليك حمام', 'تسليك مغسلة', 'تسليك مطبخ', 'تسليك كرسي حمام', 'ريحة المجاري', 'شفط مجاري', 'تنظيف مجاري', 'تسليك بالضغط']),
+    items: g(s('drain-cleaning'), ['تسليك مجاري', 'تسليك مجارى', 'تسليك بلاعات', 'تسليك بلاليع', 'بلاعة', 'بلوعة', 'انسداد المجاري', 'تسليك حمام', 'تسليك مغسلة', 'تسليك مطبخ', 'تسليك كرسي حمام', 'ريحة المجاري', 'شفط مجاري', 'مناهيل', 'منهول', 'تنظيف مناهيل', 'منهول مسدود', 'غطاء منهول', 'تنظيف مجاري', 'تسليك بالضغط']),
   },
   {
     title: 'مواسير ومحابس',
@@ -39,7 +39,7 @@ const AR: Group[] = [
   },
   {
     title: 'خزانات ومضخات',
-    items: g(s('tanks-pumps'), ['خزان ماي', 'خزانات مياه', 'تنظيف خزانات', 'تعقيم خزانات', 'غسيل خزانات', 'تنظيف تانكي', 'تانكي', 'خزان ارضي', 'خزان علوي', 'مضخة ماي', 'مضخات مياه', 'ماطور ماي', 'ماطور', 'تصليح ماطور', 'تركيب مضخة', 'دينمو ماي', 'مضخة ضغط']),
+    items: g(s('tanks-pumps'), ['خزان ماي', 'خزانات مياه', 'تنظيف خزانات', 'تعقيم خزانات', 'غسيل خزانات', 'تنظيف تانكي', 'تانكي', 'خزان ارضي', 'خزان علوي', 'مضخة ماي', 'مضخات', 'مضخات مياه', 'تصليح مضخات', 'ماطور ماي', 'ماطور', 'تصليح ماطور', 'تركيب مضخة', 'دينمو ماي', 'مضخة ضغط']),
   },
   {
     title: 'برادات وفلاتر',
@@ -81,7 +81,7 @@ const EN: Group[] = [
   },
   {
     title: 'Drains',
-    items: g(s('drain-cleaning'), ['Drain cleaning', 'Blocked drain', 'Drain unclogging', 'Clogged toilet', 'Clogged sink', 'Kitchen drain', 'Sewer cleaning', 'Sewage smell', 'High pressure jetting']),
+    items: g(s('drain-cleaning'), ['Drain cleaning', 'Blocked drain', 'Drain unclogging', 'Clogged toilet', 'Clogged sink', 'Kitchen drain', 'Sewer cleaning', 'Manhole', 'Manhole cleaning', 'Sewage smell', 'High pressure jetting']),
   },
   {
     title: 'Pipes & valves',
@@ -97,7 +97,7 @@ const EN: Group[] = [
   },
   {
     title: 'Tanks & pumps',
-    items: g(s('tanks-pumps'), ['Water tank cleaning', 'Tank disinfection', 'Water tank', 'Underground tank', 'Roof tank', 'Water pump', 'Water pump repair', 'Pump installation', 'Booster pump', 'Water motor']),
+    items: g(s('tanks-pumps'), ['Water tank cleaning', 'Tank disinfection', 'Water tank', 'Underground tank', 'Roof tank', 'Water pump', 'Pumps', 'Water pump repair', 'Pump installation', 'Booster pump', 'Water motor']),
   },
   {
     title: 'Coolers & filters',

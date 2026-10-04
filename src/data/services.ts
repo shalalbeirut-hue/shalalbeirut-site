@@ -56,7 +56,7 @@ export const SERVICES: Service[] = [
       short: 'نسلّك المغاسل والمطابخ والحمامات والمجاري الرئيسية.',
       title: 'تسليك مجاري وبلاعات بالكويت | شلال بيروت',
       desc: 'تسليك المجاري والبلاعات والمغاسل والمطابخ بمعدات حديثة، مع تنظيف المكان بعد الشغل وضمان على الخدمة.',
-      intro: 'الانسداد ما يتحمل تأخير. نسلّك الخط بالمعدات اللي تناسب نوع الانسداد، ونشوف شنو سببه عشان ما يرجع، ونخلي المكان أنظف من قبل.',
+      intro: 'الانسداد ما يتحمل تأخير. نسلّك الخط بالمعدات اللي تناسب نوع الانسداد، ونشوف شنو سببه عشان ما يرجع، ونرجّع المكان نظيف مثل ما كان.',
       includes: ['تسليك مغاسل ومطابخ', 'تسليك كراسي الحمام', 'تسليك البلاعات والمجاري الرئيسية', 'تنظيف خطوط الصرف', 'نشوف ليش الانسداد يتكرر'],
       signs: ['الماي تنزل ببطء', 'ريحة مجاري بالحمام أو المطبخ', 'صوت قرقرة من البلاعة', 'الماي ترجع من البلاعة'],
       faq: [
@@ -68,7 +68,7 @@ export const SERVICES: Service[] = [
       short: 'Unclogging sinks, kitchens, bathrooms and main drains.',
       title: 'Drain Unclogging in Kuwait | Shalal Beirut',
       desc: 'Unclogging drains, sinks, kitchens and main sewer lines with proper equipment. We clean up after the job and guarantee the work.',
-      intro: 'A blocked drain cannot wait. We clear the line with the right equipment for the blockage, check what caused it so it does not come back, and leave the area cleaner than we found it.',
+      intro: 'A blocked drain cannot wait. We clear the line with the right equipment for the blockage, check what caused it so it does not come back, and leave the area clean, just as it was.',
       includes: ['Sink and kitchen drains', 'Toilet unclogging', 'Floor drains and main lines', 'Drain line cleaning', 'Finding the cause of repeat blockages'],
       signs: ['Water drains slowly', 'Sewage smell in the bathroom or kitchen', 'Gurgling from the drain', 'Water backing up from the floor drain'],
       faq: [

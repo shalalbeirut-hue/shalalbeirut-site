@@ -8,7 +8,7 @@ import RequestForm from '../components/RequestForm.astro';
 import { SITE } from '../config';
 import { SERVICES } from '../data/services';
 import { FAQ, CONTRACTS } from '../data/content';
-import { KEYWORDS } from '../data/keywords';
+import { KEYWORD_GROUPS, AREA_KEYWORDS } from '../data/keywords';
 import { type Lang, href, UI, waLink, telLink, priceLabel } from '../i18n';
 interface Props { lang: Lang; }
 const { lang } = Astro.props;
@@ -137,8 +137,16 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
   <section class="section searches" aria-labelledby="searches-h">
     <div class="container">
       <h2 id="searches-h" class="searches-h">{ar ? 'يدوّرون علينا بـ' : 'People find us by searching'}</h2>
-      <ul class="kw">{KEYWORDS[lang].map((k) => <li><a href={href(lang, k.to)}>{k.t}</a></li>)}</ul>
-      <ul class="kw kw-alt" lang={ar ? 'en' : 'ar'} dir={ar ? 'ltr' : 'rtl'}>{KEYWORDS[ar ? 'en' : 'ar'].map((k) => <li><a href={href(ar ? 'en' : 'ar', k.to)}>{k.t}</a></li>)}</ul>
+      <div class="kw-groups">
+        {[...KEYWORD_GROUPS[lang], ...AREA_KEYWORDS(lang)].map((grp) => (
+          <div class="kw-group"><h3>{grp.title}</h3><ul class="kw">{grp.items.map((k) => <li><a href={href(lang, k.to)}>{k.t}</a></li>)}</ul></div>
+        ))}
+      </div>
+      <div class="kw-groups kw-alt" lang={ar ? 'en' : 'ar'} dir={ar ? 'ltr' : 'rtl'}>
+        {KEYWORD_GROUPS[ar ? 'en' : 'ar'].map((grp) => (
+          <div class="kw-group"><h3>{grp.title}</h3><ul class="kw">{grp.items.map((k) => <li><a href={href(ar ? 'en' : 'ar', k.to)}>{k.t}</a></li>)}</ul></div>
+        ))}
+      </div>
     </div>
   </section>
 
@@ -175,10 +183,11 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
   .on-dark { color: #e6efe9; }
 
   .searches { padding-block: 28px 36px; }
-  .searches-h { font-size: 1rem; color: var(--slate); margin-bottom: 12px; }
-  .kw { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 6px 8px; }
-  .kw + .kw { margin-top: 10px; }
-  .kw a { display: inline-block; font-size: 0.85rem; color: var(--slate); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 3px 12px; }
+  .searches-h { font-size: 1rem; color: var(--slate); margin-bottom: 14px; }
+  .kw-groups { display: grid; gap: 14px 28px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+  .kw-alt { margin-top: 24px; padding-top: 18px; border-top: 1px solid var(--line); }
+  .kw-group h3 { font-size: 0.85rem; color: var(--cedar); margin-bottom: 6px; }
+  .kw { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 4px 6px; }
+  .kw a { display: inline-block; font-size: 0.8rem; color: var(--slate); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
   .kw a:hover { color: var(--cedar); border-color: var(--cedar); }
-  .kw-alt a { font-size: 0.8rem; }
 </style>

@@ -1,95 +1,119 @@
 // Search phrases people type when they need us. Shown on the home page as visible links
 // (Google only counts text that people can see) and listed in the keywords meta and JSON-LD.
+// Spelling variants (ة/ه، ي/ى) are on purpose: people search both ways.
 import type { Lang } from '../i18n';
+import { AREAS } from './areas';
 
 type Kw = { t: string; to: string };
+type Group = { title: string; items: Kw[] };
 const s = (slug: string) => `/services/${slug}/`;
+const g = (to: string, phrases: string[]) => phrases.map((t) => ({ t, to }));
 
-export const KEYWORDS: Record<Lang, Kw[]> = {
-  ar: [
-    { t: 'سباك', to: s('plumbing') },
-    { t: 'سباكة', to: s('plumbing') },
-    { t: 'سباك الكويت', to: s('plumbing') },
-    { t: 'فني صحي', to: '/services/' },
-    { t: 'فني صحي عربي', to: '/about/' },
-    { t: 'سباك عربي', to: '/about/' },
-    { t: 'فني صحي قريب مني', to: '/areas/' },
-    { t: 'صيانة صحية', to: '/services/' },
-    { t: 'أدوات صحية', to: s('sanitary-ware') },
-    { t: 'مياه', to: '/services/' },
-    { t: 'كشف تسربات المياه', to: s('leak-detection') },
-    { t: 'تسريب ماي', to: s('leak-detection') },
-    { t: 'عزل ضد التسريب', to: s('leak-detection') },
-    { t: 'تسليك مجاري', to: s('drain-cleaning') },
-    { t: 'تسليك بلاعات', to: s('drain-cleaning') },
-    { t: 'انسداد المجاري', to: s('drain-cleaning') },
-    { t: 'مواسير', to: s('plumbing') },
-    { t: 'تمديد مواسير', to: s('plumbing') },
-    { t: 'تصليح مواسير', to: s('plumbing') },
-    { t: 'محابس', to: s('plumbing') },
-    { t: 'تغيير محابس', to: s('plumbing') },
-    { t: 'حنفيات', to: s('sanitary-ware') },
-    { t: 'تركيب حنفيات', to: s('sanitary-ware') },
-    { t: 'خلاطات', to: s('sanitary-ware') },
-    { t: 'مغسلة', to: s('sanitary-ware') },
-    { t: 'مغاسل', to: s('sanitary-ware') },
-    { t: 'تركيب مغاسل', to: s('sanitary-ware') },
-    { t: 'كرسي حمام', to: s('sanitary-ware') },
-    { t: 'سيفون', to: s('sanitary-ware') },
-    { t: 'شطاف', to: s('sanitary-ware') },
-    { t: 'سخانات', to: s('water-heaters') },
-    { t: 'تصليح سخان', to: s('water-heaters') },
-    { t: 'تركيب سخان', to: s('water-heaters') },
-    { t: 'خزان ماي', to: s('tanks-pumps') },
-    { t: 'تنظيف خزانات', to: s('tanks-pumps') },
-    { t: 'مضخة ماي', to: s('tanks-pumps') },
-    { t: 'ماطور ماي', to: s('tanks-pumps') },
-    { t: 'برادات ماي', to: s('water-coolers') },
-    { t: 'فلاتر مياه', to: s('water-coolers') },
-    { t: 'عقود صيانة عمارات', to: '/contracts/' },
-    { t: 'فني صحي حولي', to: '/areas/hawalli/' },
-    { t: 'فني صحي العاصمة', to: '/areas/capital/' },
-    { t: 'فني صحي الفروانية', to: '/areas/farwaniya/' },
-    { t: 'فني صحي الأحمدي', to: '/areas/ahmadi/' },
-    { t: 'فني صحي الجهراء', to: '/areas/jahra/' },
-    { t: 'فني صحي مبارك الكبير', to: '/areas/mubarak-al-kabeer/' },
-  ],
-  en: [
-    { t: 'Plumber', to: s('plumbing') },
-    { t: 'Plumbing', to: s('plumbing') },
-    { t: 'Plumber in Kuwait', to: '/services/' },
-    { t: 'Plumber near me', to: '/areas/' },
-    { t: 'Arabic plumber', to: '/about/' },
-    { t: 'Sanitary technician', to: '/services/' },
-    { t: 'Sanitary ware', to: s('sanitary-ware') },
-    { t: 'Water leak detection', to: s('leak-detection') },
-    { t: 'Leak repair', to: s('leak-detection') },
-    { t: 'Drain cleaning', to: s('drain-cleaning') },
-    { t: 'Blocked drain', to: s('drain-cleaning') },
-    { t: 'Pipes', to: s('plumbing') },
-    { t: 'Pipe repair', to: s('plumbing') },
-    { t: 'Valves', to: s('plumbing') },
-    { t: 'Taps', to: s('sanitary-ware') },
-    { t: 'Faucets', to: s('sanitary-ware') },
-    { t: 'Mixer taps', to: s('sanitary-ware') },
-    { t: 'Sinks', to: s('sanitary-ware') },
-    { t: 'Wash basin installation', to: s('sanitary-ware') },
-    { t: 'Toilet repair', to: s('sanitary-ware') },
-    { t: 'Water heater repair', to: s('water-heaters') },
-    { t: 'Water heater installation', to: s('water-heaters') },
-    { t: 'Water tank cleaning', to: s('tanks-pumps') },
-    { t: 'Water pump', to: s('tanks-pumps') },
-    { t: 'Water coolers', to: s('water-coolers') },
-    { t: 'Water filters', to: s('water-coolers') },
-    { t: 'Building maintenance contracts', to: '/contracts/' },
-    { t: 'Plumber Hawalli', to: '/areas/hawalli/' },
-    { t: 'Plumber Kuwait City', to: '/areas/capital/' },
-    { t: 'Plumber Farwaniya', to: '/areas/farwaniya/' },
-    { t: 'Plumber Ahmadi', to: '/areas/ahmadi/' },
-    { t: 'Plumber Jahra', to: '/areas/jahra/' },
-    { t: 'Plumber Mubarak Al-Kabeer', to: '/areas/mubarak-al-kabeer/' },
-  ],
-};
+const AR: Group[] = [
+  {
+    title: 'فني صحي وسباك',
+    items: [
+      ...g('/services/', ['فني صحي', 'فنى صحى', 'صحي', 'فني صحي الكويت', 'افضل فني صحي', 'فني صحي شاطر', 'معلم صحي', 'فني صحي عربي', 'صحي عربي', 'فني صحي ٢٤ ساعة', 'فني صحي طوارئ', 'فني صحي متنقل', 'فني صحي قريب مني', 'فني صحي رخيص', 'رقم فني صحي', 'فني صحي واتساب', 'صيانة صحية', 'صيانه صحيه', 'اعمال صحية', 'شركة صيانة صحية', 'مقاول صحي']),
+      ...g(s('plumbing'), ['سباك', 'سباكة', 'سباكه', 'سباك الكويت', 'سباك عربي', 'سباك قريب مني', 'سباك طوارئ', 'سباك ٢٤ ساعة', 'معلم سباكة', 'اعمال سباكة', 'خدمات السباكة', 'صيانة سباكة']),
+    ],
+  },
+  {
+    title: 'تسربات وعزل',
+    items: g(s('leak-detection'), ['كشف تسربات', 'كشف تسربات المياه', 'كشف تسريب المياه بالاجهزة', 'كشف تسربات بدون تكسير', 'تسريب ماي', 'تسريب مياه', 'تسربات الحمام', 'تسريب سقف', 'رطوبة الجدران', 'تهريب ماي', 'عزل ضد التسريب', 'عزل حمامات', 'عزل سطح', 'سيل تانكي', 'فاتورة الماي عالية']),
+  },
+  {
+    title: 'مجاري وبلاليع',
+    items: g(s('drain-cleaning'), ['تسليك مجاري', 'تسليك مجارى', 'تسليك بلاعات', 'تسليك بلاليع', 'بلاعة', 'بلوعة', 'انسداد المجاري', 'تسليك حمام', 'تسليك مغسلة', 'تسليك مطبخ', 'تسليك كرسي حمام', 'ريحة المجاري', 'شفط مجاري', 'تنظيف مجاري', 'تسليك بالضغط']),
+  },
+  {
+    title: 'مواسير ومحابس',
+    items: g(s('plumbing'), ['مواسير', 'مواسير مياه', 'تمديد مواسير', 'تمديدات صحية', 'تصليح مواسير', 'تبديل مواسير', 'مواسير بي بي ار', 'مواسير PPR', 'مواسير بلاستيك', 'محابس', 'محبس', 'تغيير محابس', 'محبس رئيسي', 'محبس زاوية', 'عوامة', 'تبديل عوامة', 'ضغط الماي ضعيف', 'صوت بالمواسير']),
+  },
+  {
+    title: 'حنفيات ومغاسل وحمامات',
+    items: g(s('sanitary-ware'), ['حنفيات', 'حنفية', 'حنفيه', 'تركيب حنفيات', 'تصليح حنفية', 'خلاطات', 'خلاط', 'تبديل خلاط', 'خلاط مطبخ', 'خلاط شاور', 'مغسلة', 'مغسله', 'مغاسل', 'تركيب مغاسل', 'مغسلة مطبخ', 'مجلى', 'كرسي حمام', 'كرسي افرنجي', 'كرسي عربي', 'تركيب كرسي حمام', 'سيفون', 'تصليح سيفون', 'شطاف', 'شطافات', 'بانيو', 'شاور', 'دش', 'تجديد حمامات', 'ادوات صحية', 'أدوات صحية', 'محل ادوات صحية', 'ادوات صحية الكويت', 'اكسسوارات حمامات']),
+  },
+  {
+    title: 'سخانات',
+    items: g(s('water-heaters'), ['سخانات', 'سخان', 'تصليح سخان', 'تصليح سخانات', 'تركيب سخان', 'تبديل سخان', 'سخان ما يسخن', 'سخان يهرب', 'هيتر سخان', 'ثرموستات سخان', 'سخان مركزي', 'سخان فوري']),
+  },
+  {
+    title: 'خزانات ومضخات',
+    items: g(s('tanks-pumps'), ['خزان ماي', 'خزانات مياه', 'تنظيف خزانات', 'تعقيم خزانات', 'غسيل خزانات', 'تنظيف تانكي', 'تانكي', 'خزان ارضي', 'خزان علوي', 'مضخة ماي', 'مضخات مياه', 'ماطور ماي', 'ماطور', 'تصليح ماطور', 'تركيب مضخة', 'دينمو ماي', 'مضخة ضغط']),
+  },
+  {
+    title: 'برادات وفلاتر',
+    items: g(s('water-coolers'), ['برادات ماي', 'برادات مياه', 'برادة ماي', 'تصليح برادة', 'فلاتر مياه', 'فلتر ماي', 'فلتر سيل', 'تركيب فلتر', 'تبديل فلاتر', 'فلتر مطبخ', 'فلتر سنترال', 'ماي شرب']),
+  },
+  {
+    title: 'شركات وعماير',
+    items: g('/contracts/', ['عقود صيانة', 'عقود صيانة عمارات', 'صيانة عمارات', 'صيانة شاليهات', 'صيانة مكاتب', 'صيانة مطاعم', 'صيانة مدارس', 'صيانة دورية']),
+  },
+  {
+    title: 'ضمان وأسعار',
+    items: [
+      ...g('/warranty/', ['فني صحي بالضمان', 'صيانة مع ضمان', 'ضمان مكتوب']),
+      ...g('/prices/', ['اسعار فني صحي', 'اسعار السباكة', 'اسعار تسليك المجاري', 'اسعار كشف التسربات', 'كشف مجاني']),
+    ],
+  },
+];
 
-/** Both languages, for the keywords meta and the business JSON-LD. */
-export const keywordList = (lang: Lang) => [...KEYWORDS[lang], ...KEYWORDS[lang === 'ar' ? 'en' : 'ar']].map((k) => k.t);
+const EN: Group[] = [
+  {
+    title: 'Plumbers',
+    items: [
+      ...g('/services/', ['Plumber', 'Plumber in Kuwait', 'Plumber Kuwait', 'Best plumber Kuwait', 'Plumber near me', 'Emergency plumber', '24 hour plumber', 'Arabic plumber', 'Sanitary technician', 'Sanitary works', 'Plumbing company Kuwait', 'Plumbing contractor', 'Cheap plumber', 'Plumber WhatsApp']),
+      ...g(s('plumbing'), ['Plumbing', 'Plumbing services', 'Plumbing repair', 'Plumbing maintenance', 'Handyman plumbing']),
+    ],
+  },
+  {
+    title: 'Leaks',
+    items: g(s('leak-detection'), ['Leak detection', 'Water leak detection', 'Leak detection without breaking', 'Leak repair', 'Bathroom leak', 'Ceiling leak', 'Wall dampness', 'Waterproofing', 'Bathroom waterproofing', 'Roof waterproofing', 'Tank sealant', 'High water bill']),
+  },
+  {
+    title: 'Drains',
+    items: g(s('drain-cleaning'), ['Drain cleaning', 'Blocked drain', 'Drain unclogging', 'Clogged toilet', 'Clogged sink', 'Kitchen drain', 'Sewer cleaning', 'Sewage smell', 'High pressure jetting']),
+  },
+  {
+    title: 'Pipes & valves',
+    items: g(s('plumbing'), ['Pipes', 'Water pipes', 'Pipe repair', 'Pipe replacement', 'Pipe installation', 'PPR pipes', 'Valves', 'Valve replacement', 'Main valve', 'Angle valve', 'Float valve', 'Low water pressure']),
+  },
+  {
+    title: 'Taps, sinks & bathrooms',
+    items: g(s('sanitary-ware'), ['Taps', 'Tap repair', 'Faucets', 'Faucet installation', 'Mixer taps', 'Kitchen mixer', 'Shower mixer', 'Sinks', 'Kitchen sink', 'Wash basin', 'Wash basin installation', 'Toilet', 'Toilet repair', 'Toilet installation', 'Flush tank repair', 'Bidet sprayer', 'Shattaf', 'Bathtub', 'Shower', 'Bathroom renovation', 'Sanitary ware', 'Sanitary ware shop Kuwait', 'Bathroom fittings', 'Bathroom accessories']),
+  },
+  {
+    title: 'Water heaters',
+    items: g(s('water-heaters'), ['Water heater repair', 'Water heater installation', 'Water heater replacement', 'Geyser repair', 'Boiler repair', 'Heater element', 'Heater thermostat', 'Instant water heater']),
+  },
+  {
+    title: 'Tanks & pumps',
+    items: g(s('tanks-pumps'), ['Water tank cleaning', 'Tank disinfection', 'Water tank', 'Underground tank', 'Roof tank', 'Water pump', 'Water pump repair', 'Pump installation', 'Booster pump', 'Water motor']),
+  },
+  {
+    title: 'Coolers & filters',
+    items: g(s('water-coolers'), ['Water coolers', 'Water cooler repair', 'Water filters', 'Water filter installation', 'Filter replacement', 'Drinking water filter', 'Central water filter']),
+  },
+  {
+    title: 'Business & pricing',
+    items: [
+      ...g('/contracts/', ['Maintenance contracts', 'Building maintenance', 'Chalet maintenance', 'Office maintenance', 'Restaurant plumbing']),
+      ...g('/warranty/', ['Plumbing warranty', 'Written warranty']),
+      ...g('/prices/', ['Plumber prices Kuwait', 'Plumbing rates', 'Free inspection']),
+    ],
+  },
+];
+
+/** "فني صحي السالمية", "Plumber Salmiya"… for every place we list, linked to its governorate page. */
+const areaGroups = (lang: Lang): Group[] =>
+  AREAS.map((a) => ({
+    title: lang === 'ar' ? `فني صحي ${a.ar.name}` : `Plumber in ${a.en.name}`,
+    items: g(`/areas/${a.slug}/`, a[lang].places.map((p) => (lang === 'ar' ? `فني صحي ${p}` : `Plumber ${p}`))),
+  }));
+
+export const KEYWORD_GROUPS: Record<Lang, Group[]> = { ar: AR, en: EN };
+export const AREA_KEYWORDS = areaGroups;
+
+/** Core phrases in both languages (no per-place ones), for the keywords meta and the business JSON-LD. */
+export const keywordList = (lang: Lang) =>
+  [...KEYWORD_GROUPS[lang], ...KEYWORD_GROUPS[lang === 'ar' ? 'en' : 'ar']].flatMap((grp) => grp.items.map((k) => k.t));

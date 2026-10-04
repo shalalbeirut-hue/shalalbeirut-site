@@ -31,11 +31,11 @@ const AR: Group[] = [
   },
   {
     title: 'حنفيات ومغاسل وحمامات',
-    items: g(s('sanitary-ware'), ['حنفيات', 'حنفية', 'حنفيه', 'تركيب حنفيات', 'تصليح حنفية', 'خلاطات', 'خلاط', 'تبديل خلاط', 'خلاط مطبخ', 'خلاط شاور', 'مغسلة', 'مغسله', 'مغاسل', 'تركيب مغاسل', 'مغسلة مطبخ', 'مجلى', 'كرسي حمام', 'كرسي افرنجي', 'كرسي عربي', 'تركيب كرسي حمام', 'سيفون', 'تصليح سيفون', 'شطاف', 'شطافات', 'بانيو', 'شاور', 'دش', 'تجديد حمامات', 'ادوات صحية', 'أدوات صحية', 'محل ادوات صحية', 'ادوات صحية الكويت', 'اكسسوارات حمامات']),
+    items: g(s('sanitary-ware'), ['حنفيات', 'حنفية', 'حنفيه', 'تركيب حنفيات', 'تصليح حنفية', 'خلاطات', 'خلاط', 'خلاطات حمام', 'خلاطات مطبخ', 'خلاطات مغاسل', 'خلاطات شاور', 'خلاطات دفن', 'خلاط مخفي', 'خلاط حار بارد', 'تركيب خلاطات', 'تصليح خلاطات', 'تبديل خلاط', 'خلاط يهرب', 'خلاط مطبخ', 'خلاط شاور', 'مغسلة', 'مغسله', 'مغاسل', 'تركيب مغاسل', 'مغسلة مطبخ', 'مجلى', 'كرسي حمام', 'كرسي افرنجي', 'كرسي عربي', 'تركيب كرسي حمام', 'سيفون', 'تصليح سيفون', 'شطاف', 'شطافات', 'بانيو', 'شاور', 'دش', 'تجديد حمامات', 'ادوات صحية', 'أدوات صحية', 'محل ادوات صحية', 'ادوات صحية الكويت', 'اكسسوارات حمامات']),
   },
   {
     title: 'سخانات',
-    items: g(s('water-heaters'), ['سخانات', 'سخان', 'تصليح سخان', 'تصليح سخانات', 'تركيب سخان', 'تبديل سخان', 'سخان ما يسخن', 'سخان يهرب', 'هيتر سخان', 'ثرموستات سخان', 'سخان مركزي', 'سخان فوري']),
+    items: g(s('water-heaters'), ['سخانات', 'سخان', 'تصليح سخان', 'تصليح سخانات', 'تركيب سخان', 'تبديل سخان', 'سخان ما يسخن', 'سخان يهرب', 'هيتر سخان', 'ثرموستات سخان', 'سخان مركزي', 'سخانات مركزي', 'سخانات مركزية', 'تركيب سخان مركزي', 'صيانة سخانات مركزية', 'سخان مركزي للبيت', 'سخان مركزي للعمارة', 'سخانات كهربائية', 'سخان ٥٠ لتر', 'سخان ١٠٠ لتر', 'سخان شمسي', 'سخان فوري']),
   },
   {
     title: 'خزانات ومضخات',
@@ -89,11 +89,11 @@ const EN: Group[] = [
   },
   {
     title: 'Taps, sinks & bathrooms',
-    items: g(s('sanitary-ware'), ['Taps', 'Tap repair', 'Faucets', 'Faucet installation', 'Mixer taps', 'Kitchen mixer', 'Shower mixer', 'Sinks', 'Kitchen sink', 'Wash basin', 'Wash basin installation', 'Toilet', 'Toilet repair', 'Toilet installation', 'Flush tank repair', 'Bidet sprayer', 'Shattaf', 'Bathtub', 'Shower', 'Bathroom renovation', 'Sanitary ware', 'Sanitary ware shop Kuwait', 'Bathroom fittings', 'Bathroom accessories']),
+    items: g(s('sanitary-ware'), ['Taps', 'Tap repair', 'Faucets', 'Faucet installation', 'Mixer taps', 'Mixers', 'Bathroom mixer', 'Basin mixer', 'Kitchen mixer', 'Shower mixer', 'Concealed mixer', 'Mixer installation', 'Mixer repair', 'Sinks', 'Kitchen sink', 'Wash basin', 'Wash basin installation', 'Toilet', 'Toilet repair', 'Toilet installation', 'Flush tank repair', 'Bidet sprayer', 'Shattaf', 'Bathtub', 'Shower', 'Bathroom renovation', 'Sanitary ware', 'Sanitary ware shop Kuwait', 'Bathroom fittings', 'Bathroom accessories']),
   },
   {
     title: 'Water heaters',
-    items: g(s('water-heaters'), ['Water heater repair', 'Water heater installation', 'Water heater replacement', 'Geyser repair', 'Boiler repair', 'Heater element', 'Heater thermostat', 'Instant water heater']),
+    items: g(s('water-heaters'), ['Water heater repair', 'Water heater installation', 'Water heater replacement', 'Geyser repair', 'Boiler repair', 'Heater element', 'Heater thermostat', 'Instant water heater', 'Central water heater', 'Central water heater installation', 'Central water heater maintenance', 'Electric water heater', 'Solar water heater']),
   },
   {
     title: 'Tanks & pumps',

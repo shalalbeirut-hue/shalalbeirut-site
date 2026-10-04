@@ -17,7 +17,7 @@ export function DocSheet({ doc, forExport }: { doc: any; forExport?: 'pdf' | 'pn
     <article class={`sheet ${forExport ? 'export export-' + forExport : ''}`} dir="rtl" lang="ar">
       <header class="sh-band">
         <div class="sh-brand">
-          <Mark pipe="#FFFFFF" water="#62C0EA" />
+          <Mark dark />
           <div>
             <div class="sh-name">شلال بيروت</div>
             <div class="sh-legal">{SITE.legalAr}</div>

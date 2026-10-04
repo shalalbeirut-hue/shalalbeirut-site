@@ -39,18 +39,10 @@ export function Icon({ name, class: cls }: { name: string; class?: string }) {
   );
 }
 
-export function Mark({ pipe = '#17583A', water = '#1B8CC4' }: { pipe?: string; water?: string }) {
-  return (
-    <svg viewBox="10 1 100 110" aria-hidden="true">
-      <path d="M60 4C60 4 54 11 54 14.5A6 6 0 0 0 66 14.5C66 11 60 4 60 4Z" fill={water} />
-      <g fill="none" stroke={pipe} stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M60 25V92" /><path d="M49 38V36Q49 30 55 30H65Q71 30 71 36V38" /><path d="M40 53V50Q40 44 46 44H74Q80 44 80 50V53" />
-        <path d="M31 68V64Q31 58 37 58H83Q89 58 89 64V68" /><path d="M22 83V78Q22 72 28 72H92Q98 72 98 78V83" />
-      </g>
-      <path d="M14 104q11.5-7 23 0t23 0t23 0t23 0" fill="none" stroke={water} stroke-width="6" stroke-linecap="round" />
-    </svg>
-  );
-}
+/** The badge (tap, cedar and water). `dark` puts it on a white disc for dark backgrounds. */
+export const Mark = ({ dark = false }: { dark?: boolean }) => (
+  <img class={`mark${dark ? ' mark-dark' : ''}`} src="/logo.webp" width={256} height={256} alt="" />
+);
 
 export const StatusBadge = ({ status }: { status: string }) => {
   const s = STATUS[status] ?? { label: status, tone: 'muted' };

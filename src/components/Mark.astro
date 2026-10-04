@@ -1,16 +1,7 @@
 ---
-// The Shalal Beirut mark (C2: pipe cedar). Same geometry as brand/tools/build-logo.mjs.
-interface Props { pipe?: string; water?: string; class?: string; title?: string; }
-const { pipe = '#17583A', water = '#1B8CC4', class: cls, title } = Astro.props;
+// The Shalal Beirut badge (tap, cedar and water). Built by brand/tools/build-logo-v2-assets.mjs.
+// On dark backgrounds pass `dark` to sit it on a white disc so the silver ring stays visible.
+interface Props { class?: string; title?: string; dark?: boolean; }
+const { class: cls, title, dark = false } = Astro.props;
 ---
-<svg class={cls} viewBox="10 1 100 110" role={title ? 'img' : undefined} aria-label={title} aria-hidden={title ? undefined : 'true'}>
-  <path d="M60 4C60 4 54 11 54 14.5A6 6 0 0 0 66 14.5C66 11 60 4 60 4Z" fill={water} />
-  <g fill="none" stroke={pipe} stroke-width="6" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M60 25V92" />
-    <path d="M49 38V36Q49 30 55 30H65Q71 30 71 36V38" />
-    <path d="M40 53V50Q40 44 46 44H74Q80 44 80 50V53" />
-    <path d="M31 68V64Q31 58 37 58H83Q89 58 89 64V68" />
-    <path d="M22 83V78Q22 72 28 72H92Q98 72 98 78V83" />
-  </g>
-  <path d="M14 104q11.5-7 23 0t23 0t23 0t23 0" fill="none" stroke={water} stroke-width="6" stroke-linecap="round" />
-</svg>
+<img class:list={['mark', cls, { 'mark-dark': dark }]} src="/logo.webp" width="256" height="256" alt={title ?? ''} decoding="async" />

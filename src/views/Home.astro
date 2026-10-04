@@ -39,7 +39,7 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
       </div>
       <div class="hero-card" aria-hidden="true">
         <div class="hc-top">
-          <Mark pipe="#FFFFFF" water="#62C0EA" class="hc-mark" />
+          <Mark dark class="hc-mark" />
           <div class="stamp"><span class="s1">{ar ? 'ضمان' : 'WARRANTY'}</span><span class="s2">{ar ? 'مكتوب' : 'IN WRITING'}</span></div>
         </div>
         <ol class="hc-list">
@@ -167,7 +167,7 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
 
   .hero-card { background: var(--deep); color: #d5e6dc; border-radius: 24px; padding: clamp(22px, 4vw, 32px); display: flex; flex-direction: column; gap: 22px; position: relative; box-shadow: 0 24px 60px rgba(15, 42, 31, 0.22); }
   .hc-top { display: flex; justify-content: space-between; align-items: flex-start; }
-  :global(.hc-mark) { width: 104px; height: 114px; }
+  :global(.hc-mark) { width: 112px; height: 112px; }
   .stamp { width: 104px; height: 104px; border-radius: 50%; border: 3px dashed var(--sand); color: var(--sand); display: flex; flex-direction: column; align-items: center; justify-content: center; transform: rotate(-10deg); text-align: center; line-height: 1.1; }
   .s1 { font-family: var(--f-display); font-weight: 700; font-size: 1.5rem; }
   :global(html[lang='en']) .s1 { font-family: var(--f-latin); font-size: 0.95rem; letter-spacing: 0.08em; }

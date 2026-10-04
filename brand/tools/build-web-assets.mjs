@@ -1,3 +1,4 @@
+// SUPERSEDED: the site now uses the tap + cedar badge; run build-logo-v2-assets.mjs instead (this one would put the old C2 icons back).
 // Writes favicons, app icons and social share images into public/.
 // Usage: node build-logo.mjs && node build-web-assets.mjs
 import sharp from 'sharp';

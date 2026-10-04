@@ -102,7 +102,7 @@ export default function App() {
     <AppCtx.Provider value={{ user, go, counts, refreshCounts }}>
       <div class="shell">
         <header class="topbar">
-          <a class="brand" href="/app/"><Mark pipe="#fff" water="#62C0EA" />شلال بيروت</a>
+          <a class="brand" href="/app/"><Mark dark />شلال بيروت</a>
           <span class="spacer" />
           <span class="whoami"><b>{user.name}</b><span>{ROLE[user.role]}</span></span>
           <a class="icon-btn" href="/app/notifications" aria-label="التنبيهات" style="color:#fff">

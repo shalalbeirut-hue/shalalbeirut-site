@@ -66,7 +66,9 @@ const L = ar
         : ['Hello, I would like to book a service', `Name: ${name}`, `Mobile: ${mobile}`, `Service: ${f.get('service')}`, `Governorate: ${f.get('area')}`, `Area/block: ${f.get('block') || '-'}`, `Preferred time: ${f.get('when')}`, `Problem: ${f.get('desc') || '-'}`];
       const wa = form.dataset.wa;
       if (!wa) { form.querySelector<HTMLElement>('[data-nonumber]')!.hidden = false; return; }
-      window.location.href = `https://wa.me/${wa}?text=${encodeURIComponent(lines.join('\n'))}`;
+      const go = () => { window.location.href = `https://wa.me/${wa}?text=${encodeURIComponent(lines.join('\n'))}`; };
+      const track = (window as unknown as { shalalTrack?: (k: string, cb: () => void) => void }).shalalTrack;
+      track ? track('form', go) : go();
     });
   });
 </script>

@@ -24,6 +24,7 @@ const { lang, path, title, desc, jsonld = [], noindex = false } = Astro.props;
 const canonical = SITE.url + href(lang, path);
 const alt = { ar: SITE.url + href('ar', path), en: SITE.url + href('en', path) };
 const ogImage = SITE.url + (lang === 'ar' ? '/og-ar.png' : '/og-en.png');
+const ads = SITE.ads.id ? { id: SITE.ads.id, labels: SITE.ads.labels, wa: SITE.whatsapp, tel: SITE.phone } : null;
 const missingData = !SITE.whatsapp || !SITE.phone;
 
 // Every page carries the business entity so Google ties all pages to one local business.
@@ -74,6 +75,28 @@ const blocks = [{ ...business, keywords: keywords.join(', '), knowsAbout: keywor
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta name="twitter:card" content="summary_large_image" />
+    {ads && <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${ads.id}`}></script>}
+    {ads && <script is:inline define:vars={{ ads }}>
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', ads.id);
+      // kind: 'whatsapp' | 'phone' | 'form'. Calls cb once the hit is sent (or after 800ms).
+      window.shalalTrack = function (kind, cb) {
+        var label = ads.labels[kind], done = false;
+        var finish = function () { if (!done) { done = true; if (cb) cb(); } };
+        if (!label) return finish();
+        gtag('event', 'conversion', { send_to: ads.id + '/' + label, event_callback: finish });
+        setTimeout(finish, 800);
+      };
+      document.addEventListener('click', function (e) {
+        var a = e.target.closest && e.target.closest('a[href]');
+        if (!a) return;
+        var h = a.getAttribute('href') || '';
+        if (h.indexOf('wa.me/') > -1) window.shalalTrack('whatsapp');
+        else if (h.indexOf('tel:') === 0) window.shalalTrack('phone');
+      }, true);
+    </script>}
     {blocks.map((b) => <script type="application/ld+json" set:html={JSON.stringify(b)} />)}
   </head>
   <body>

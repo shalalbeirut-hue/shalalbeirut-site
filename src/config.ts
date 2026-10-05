@@ -27,6 +27,17 @@ export const SITE = {
 
   hours: { opens: '08:00', closes: '22:00', days: 'Sa-Th' },
   openingOffer: true,
+
+  // Google Ads conversion tracking. Leave id empty to disable (no script is loaded).
+  // id: 'AW-1234567890'. labels: the label part of each conversion's send_to ('AW-id/label').
+  ads: {
+    id: 'AW-18494504490',
+    labels: {
+      whatsapp: 'M80RCNKU9pEdEKr87vJE',
+      phone: 'rfzJCNiI95EdEKr87vJE',
+      form: 'OJjdCPjb75EdEKr87vJE',
+    },
+  },
 };
 
 export const COLORS = {

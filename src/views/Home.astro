@@ -15,9 +15,9 @@ const { lang } = Astro.props;
 const t = UI[lang];
 const ar = lang === 'ar';
 
-const title = ar ? 'فني صحي بالكويت في الموعد وبالضمان | شلال بيروت' : 'Plumber in Kuwait, On Time and Guaranteed | Shalal Beirut';
+const title = ar ? 'سباك وفني صحي بالكويت، في الموعد وبالضمان | شلال بيروت' : 'Plumber in Kuwait, On Time and Guaranteed | Shalal Beirut';
 const desc = ar
-  ? 'شلال بيروت للأدوات الصحية وصيانتها: فني صحي في كل مناطق الكويت. كشف تسربات، تسليك مجاري، سخانات، خزانات ومضخات. موعد محدد، السعر قبل الشغل، وضمان مكتوب.'
+  ? 'شلال بيروت للأدوات الصحية وصيانتها: سباك وفني صحي في كل مناطق الكويت. كشف تسربات، تسليك مجاري، سخانات، خزانات ومضخات. موعد محدد، السعر قبل الشغل، وضمان مكتوب.'
   : 'Shalal Beirut Sanitary Ware & Maintenance: plumbers across Kuwait for leak detection, drain unclogging, water heaters, tanks and pumps. Fixed arrival time, price before work, written warranty.';
 const teaser = SERVICES.flatMap((s) => s.prices.filter((p) => (p.from ?? 0) > 0).slice(0, 1).map((p) => ({ s, p }))).slice(0, 6);
 const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar ? SITE.nameAr : SITE.nameEn, url: SITE.url + href(lang, '/'), inLanguage: ar ? 'ar-KW' : 'en-KW' };

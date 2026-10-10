@@ -48,6 +48,8 @@ const year = new Date().getFullYear();
       {socials.length > 0 && <p class="socials">{socials.map(([n, u]) => <a href={u} rel="me noopener">{n}</a>)}</p>}
       <ul class="f-list small">
         <li><a href={href(lang, '/warranty/')}>{ar ? 'سياسة الضمان' : 'Warranty policy'}</a></li>
+        <li><a href={href(lang, '/privacy/')}>{ar ? 'سياسة الخصوصية' : 'Privacy policy'}</a></li>
+        <li><a href={href(lang, '/terms/')}>{ar ? 'الشروط والأحكام' : 'Terms of service'}</a></li>
         <li><a href={href(lang, '/about/')}>{ar ? 'من نحن' : 'About us'}</a></li>
         <li><a href="/my/" rel="nofollow">{ar ? 'دخول العملاء (حسابي)' : 'Customer login'}</a></li>
         <li><a href="/app/" rel="nofollow">{ar ? 'دخول الفريق' : 'Team login'}</a></li>

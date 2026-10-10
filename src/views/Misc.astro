@@ -10,7 +10,7 @@ import { SERVICES } from '../data/services';
 import { CONTRACTS, FAQ } from '../data/content';
 import { type Lang, href, UI, waLink, telLink, displayPhone, priceLabel } from '../i18n';
 
-type Kind = 'services' | 'areas' | 'prices' | 'reviews' | 'contracts' | 'warranty' | 'about' | 'contact' | '404';
+type Kind = 'services' | 'areas' | 'prices' | 'reviews' | 'contracts' | 'warranty' | 'about' | 'contact' | 'privacy' | 'terms' | '404';
 interface Props { lang: Lang; kind: Kind; }
 const { lang, kind } = Astro.props;
 const t = UI[lang];
@@ -71,6 +71,20 @@ const META: Record<Kind, { path: string; title: string; desc: string; h1: string
     desc: ar ? 'اطلب فني صحي على الواتساب أو بالاتصال أو من نموذج الطلب. محلنا في دوار الكرد، ونغطي كل مناطق الكويت.' : 'Book a plumber on WhatsApp, by phone or with the request form. Our shop is at Al-Kurd Roundabout and we cover all of Kuwait.',
     h1: ar ? 'تواصل معنا' : 'Contact us',
     lead: ar ? 'أسرع طريقة: صوّر المشكلة وطرشها لنا على الواتساب.' : 'The fastest way: take a photo of the problem and send it on WhatsApp.',
+  },
+  privacy: {
+    path: '/privacy/', label: ar ? 'سياسة الخصوصية' : 'Privacy policy',
+    title: ar ? 'سياسة الخصوصية | شلال بيروت' : 'Privacy Policy | Shalal Beirut',
+    desc: ar ? 'شلون يتعامل شلال بيروت ويا بياناتك: شنو نجمع، ولشنو نستخدمه، ومن يوصله.' : 'How Shalal Beirut handles your data: what we collect, why we use it and who receives it.',
+    h1: ar ? 'سياسة الخصوصية' : 'Privacy policy',
+    lead: ar ? 'نجمع أقل بيانات نحتاجها عشان نخدمك، وما نبيعها لأحد.' : 'We collect the minimum we need to serve you, and we never sell it.',
+  },
+  terms: {
+    path: '/terms/', label: ar ? 'الشروط والأحكام' : 'Terms of service',
+    title: ar ? 'الشروط والأحكام | شلال بيروت' : 'Terms of Service | Shalal Beirut',
+    desc: ar ? 'شروط استخدام موقع شلال بيروت وطلب الخدمة: الأسعار، الموعد، والضمان.' : 'Terms for using the Shalal Beirut website and requesting a service: prices, appointments and warranty.',
+    h1: ar ? 'الشروط والأحكام' : 'Terms of service',
+    lead: ar ? 'شروط بسيطة لاستخدام الموقع وطلب الخدمة.' : 'Simple terms for using the website and requesting a service.',
   },
   '404': {
     path: '/404/', label: '404',
@@ -154,6 +168,51 @@ const priceLd = kind === 'prices' ? [{
         </ul>
         <h2>{ar ? 'شلون تطلب الضمان' : 'How to claim'}</h2>
         <p>{ar ? 'طرش لنا رقم الطلب أو صورة الفاتورة على الواتساب، ونحدد لك موعد.' : 'Send us your order number or a photo of the invoice on WhatsApp and we will book a visit.'}</p>
+      </div>
+    </section>
+  )}
+
+  {kind === 'privacy' && (
+    <section class="section">
+      <div class="container prose">
+        <h2>{ar ? 'شنو نجمع' : 'What we collect'}</h2>
+        <ul class="checklist">
+          <li>{ar ? 'لما تطلب خدمة: اسمك ورقم موبايلك والمحافظة والمنطقة ووصف المشكلة. نموذج الطلب في الموقع ما يحفظها عندنا، هو يجهّز لك رسالة واتساب وتطرشها إنت.' : 'When you request a service: your name, mobile number, governorate, area and a description of the problem. The request form on the site does not store them, it prepares a WhatsApp message that you send yourself.'}</li>
+          <li>{ar ? 'لما نخدمك: عنوانك، وتفاصيل الطلب والفاتورة والضمان، والصور اللي تطرشها أو يصوّرها الفني للشغل.' : 'When we serve you: your address, the order, invoice and warranty details, and photos you send or the technician takes of the job.'}</li>
+          <li>{ar ? 'بعد الخدمة: إجاباتك في الاستبيان القصير إذا عبّيته.' : 'After the service: your answers to the short survey, if you fill it in.'}</li>
+          <li>{ar ? 'بيانات استخدام الموقع: نقرات الواتساب والاتصال وإرسال النموذج، عشان نقيس إعلاناتنا على جوجل.' : 'Site usage data: clicks on WhatsApp and phone and form submissions, so we can measure our Google ads.'}</li>
+        </ul>
+        <h2>{ar ? 'لشنو نستخدمها' : 'What we use it for'}</h2>
+        <p>{ar ? 'نحدد الموعد، ننفّذ الشغل، نصدر الفاتورة والضمان، ونتابع معاك بعد الخدمة. ونستخدم تقييمك لتحسين الخدمة، ونحط الرأي بالموقع بس إذا وافقت.' : 'To book the visit, do the work, issue the invoice and warranty, and follow up afterwards. We use your rating to improve the service, and publish a review on the site only if you agree.'}</p>
+        <h2>{ar ? 'من يوصله' : 'Who receives it'}</h2>
+        <ul class="checklist">
+          <li>{ar ? 'ما نبيع بياناتك ولا نشاركها للتسويق.' : 'We do not sell your data or share it for marketing.'}</li>
+          <li>{ar ? 'الواتساب (ميتا): الرسائل اللي تطرشها لنا تمر عبر خدمتهم.' : 'WhatsApp (Meta): messages you send us pass through their service.'}</li>
+          <li>{ar ? 'جوجل: نستخدم وسم إعلانات جوجل لقياس النقرات وإرسال النموذج.' : 'Google: we use the Google Ads tag to measure clicks and form submissions.'}</li>
+          <li>{ar ? 'الاستضافة (Cloudflare): الموقع ونظام الطلبات مستضافين عندهم.' : 'Hosting (Cloudflare): the site and our orders system are hosted there.'}</li>
+        </ul>
+        <h2>{ar ? 'حقوقك' : 'Your choices'}</h2>
+        <p>{ar ? 'تقدر تطلب نشوف بياناتك أو نصححها أو نحذفها، ما عدا اللي نحتاجه عشان الفاتورة والضمان. راسلنا على الواتساب أو الإيميل.' : 'You can ask to see, correct or delete your data, except what we need for the invoice and warranty. Contact us on WhatsApp or email.'}</p>
+        <p><a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
+      </div>
+    </section>
+  )}
+
+  {kind === 'terms' && (
+    <section class="section">
+      <div class="container prose">
+        <h2>{ar ? 'الموقع' : 'The website'}</h2>
+        <p>{ar ? 'الموقع للتعريف بخدمات شلال بيروت وطلب الخدمة. المعلومات فيه للإرشاد، وممكن تتحدّث بدون إشعار.' : 'The website introduces Shalal Beirut services and lets you request one. Information on it is a guide and may be updated without notice.'}</p>
+        <h2>{ar ? 'الأسعار' : 'Prices'}</h2>
+        <p>{ar ? 'الأسعار المكتوبة هي سعر البداية. نعطيك السعر النهائي بعد المعاينة وقبل ما نبدأ، ولا نشتغل إلا إذا وافقت. والقطع تنحسب بروحها.' : 'Listed prices are starting prices. We give you the final price after inspection and before we start, and we only work if you agree. Parts are charged separately.'}</p>
+        <h2>{ar ? 'المواعيد' : 'Appointments'}</h2>
+        <p>{ar ? 'نحدد معاك موعد وصول، ونلتزم فيه.' : 'We agree an arrival time with you and keep to it.'}</p>
+        <h2>{ar ? 'الضمان' : 'Warranty'}</h2>
+        <p>{ar ? 'شنو يشمل الضمان وشلون تطلبه مكتوب في ' : 'What the warranty covers and how to claim it is on the '}<a href={href(lang, '/warranty/')}>{ar ? 'صفحة سياسة الضمان' : 'warranty policy page'}</a>.</p>
+        <h2>{ar ? 'الخصوصية' : 'Privacy'}</h2>
+        <p>{ar ? 'تعاملنا ويا بياناتك مكتوب في ' : 'How we handle your data is described in the '}<a href={href(lang, '/privacy/')}>{ar ? 'سياسة الخصوصية' : 'privacy policy'}</a>.</p>
+        <h2>{ar ? 'التواصل' : 'Contact'}</h2>
+        <p><a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
       </div>
     </section>
   )}

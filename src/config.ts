@@ -23,7 +23,7 @@ export const SITE = {
     tiktok: '',
     snapchat: '',
   },
-  googleReviewUrl: '',
+  googleReviewUrl: 'https://g.page/r/CSQSjaVv_B77EBM/review',
 
   hours: { opens: '08:00', closes: '22:00', days: 'Sa-Th' },
   openingOffer: true,

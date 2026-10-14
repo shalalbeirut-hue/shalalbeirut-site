@@ -9,8 +9,8 @@ export const SITE = {
   email: 'shalalbeirut@gmail.com',
 
   // TODO(owner): fill these in. Kuwait numbers in international form, e.g. '96550000000'.
-  whatsapp: '96596656652',
-  phone: '96596656652',
+  whatsapp: '96551787732',
+  phone: '96551787732',
   warrantyMonths: null as number | null,
 
   shopAr: 'محلنا: دوار الكرد',

@@ -9,6 +9,7 @@ import { SITE } from '../config';
 import { SERVICES } from '../data/services';
 import { FAQ, CONTRACTS } from '../data/content';
 import { KEYWORD_GROUPS, AREA_KEYWORDS } from '../data/keywords';
+import { NEWBUILD, NEWBUILD_SERVICES } from '../data/newbuild';
 import { type Lang, href, UI, waLink, telLink, priceLabel } from '../i18n';
 interface Props { lang: Lang; }
 const { lang } = Astro.props;
@@ -107,6 +108,21 @@ const website = { '@context': 'https://schema.org', '@type': 'WebSite', name: ar
         <a class="btn btn-light" style="align-self:flex-start" href={href(lang, '/contracts/')}><Icon name="building" />{ar ? 'تفاصيل العقود' : 'Contract details'}</a>
       </div>
       <ul class="checklist on-dark">{CONTRACTS[lang].items.map((i) => <li>{i}</li>)}</ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container split">
+      <div class="stack">
+        <p class="kicker">{ar ? 'مقاولات · خبرة 30 سنة' : 'Contracting · 30 years'}</p>
+        <h2>{ar ? 'بتبني بيت جديد؟' : 'Building a new home?'}</h2>
+        <p>{ar ? 'فريق المقاولات المعتمد في شركتنا يمدّ الصرف والتغذية وشبكات التوانكي والمجاري الرئيسية للقسائم الجديدة والعماير، حسب أصول الصنعة وتحت إشراف مهندسك، وبضمان التسليم.' : 'Our licensed contracting team installs drainage, water supply, tank networks and main sewers for new plots and buildings, built to code under your engineer, with a guaranteed handover.'}</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href={waLink(NEWBUILD[lang].cta)}><Icon name="whatsapp" />{NEWBUILD[lang].sendPlan}</a>
+          <a class="btn btn-outline" href={href(lang, '/new-builds/')}>{t.learnMore}</a>
+        </div>
+      </div>
+      <ul class="checklist">{NEWBUILD_SERVICES.map((s) => <li><a href={href(lang, `/new-builds/${s.slug}/`)}>{s[lang].name}</a></li>)}<li>{ar ? 'للبيوت والفلل والعماير والمجمعات' : 'Homes, villas, buildings and complexes'}</li></ul>
     </div>
   </section>
 

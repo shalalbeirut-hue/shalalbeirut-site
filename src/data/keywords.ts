@@ -55,6 +55,10 @@ const AR: Group[] = [
     ],
   },
   {
+    title: 'مقاولات القسائم الجديدة',
+    items: g('/new-builds/', ['مقاول صحي', 'مقاول صحي معتمد', 'مقاولات صحية', 'شركة مقاولات صحية', 'تأسيس صحي', 'تأسيس صحي قسيمة', 'تمديدات صحية قسائم', 'تمديدات صحي بيت جديد', 'تمديد صرف صحي', 'تمديدات صرف صحي', 'تمديد مجاري', 'مجاري رئيسية', 'مقاول مجاري', 'تمديد تغذية مياه', 'شبكة توانكي', 'شبكات توانكي', 'شبكات توزيع المياه', 'تمديدات صحي فلل', 'تمديدات صحي عماير', 'مقاول صحي حولي', 'مقاول صحي الجهراء', 'مقاول صحي الأحمدي', 'مقاول صحي الفروانية', 'مقاول صحي مبارك الكبير', 'مقاول صحي العاصمة']),
+  },
+  {
     title: 'شركات وعماير',
     items: g('/contracts/', ['عقود صيانة', 'عقود صيانة عمارات', 'صيانة عمارات', 'صيانة شاليهات', 'صيانة مكاتب', 'صيانة مطاعم', 'صيانة مدارس', 'صيانة دورية']),
   },
@@ -111,6 +115,10 @@ const EN: Group[] = [
       ...g(s('water-heaters'), ['Ariston water heater', 'Ferroli water heater', 'Rheem water heater', 'Super General water heater']),
       ...g(s('tanks-pumps'), ['Pedrollo pump', 'Grundfos pump', 'Lowara pump', 'DAB pump', 'Wilo pump']),
     ],
+  },
+  {
+    title: 'New-build contracting',
+    items: g('/new-builds/', ['Plumbing contractor Kuwait', 'Licensed plumbing contractor', 'New build plumbing', 'Drainage contractor', 'Sewer line installation', 'Water supply installation', 'Tank network installation', 'Water distribution network', 'Villa plumbing', 'Building plumbing contractor']),
   },
   {
     title: 'Business & pricing',

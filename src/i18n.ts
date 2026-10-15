@@ -24,7 +24,7 @@ export const UI = {
   ar: {
     siteName: SITE.nameAr,
     tagline: 'في الموعد.. وبالضمان',
-    nav: { services: 'الخدمات', prices: 'الأسعار', areas: 'المناطق', reviews: 'آراء العملاء', contracts: 'عقود الشركات', contact: 'تواصل معنا' },
+    nav: { services: 'الخدمات', prices: 'الأسعار', areas: 'المناطق', reviews: 'آراء العملاء', contracts: 'عقود الشركات', newbuild: 'مقاولات', contact: 'تواصل معنا' },
     bookWa: 'احجز على الواتساب',
     call: 'اتصل علينا',
     orderThis: 'اطلب الخدمة',
@@ -45,7 +45,7 @@ export const UI = {
   en: {
     siteName: SITE.nameEn,
     tagline: 'On time. Guaranteed.',
-    nav: { services: 'Services', prices: 'Prices', areas: 'Areas', reviews: 'Reviews', contracts: 'Business contracts', contact: 'Contact' },
+    nav: { services: 'Services', prices: 'Prices', areas: 'Areas', reviews: 'Reviews', contracts: 'Business contracts', newbuild: 'Contracting', contact: 'Contact' },
     bookWa: 'Book on WhatsApp',
     call: 'Call us',
     orderThis: 'Request this service',

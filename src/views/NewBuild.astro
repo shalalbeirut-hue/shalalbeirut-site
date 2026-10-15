@@ -1,0 +1,149 @@
+---
+// New-build contracting: the hub page (no slug) and its service pages (with slug).
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import Sections from '../components/Sections.astro';
+import Blocks from '../components/Blocks.astro';
+import RequestForm from '../components/RequestForm.astro';
+import { SITE } from '../config';
+import { NEWBUILD, NEWBUILD_PATH, NEWBUILD_SERVICES, newbuildBySlug } from '../data/newbuild';
+import { GUIDES } from '../data/guides';
+import { AREAS } from '../data/areas';
+import { type Lang, href, UI, waLink, telLink } from '../i18n';
+interface Props { lang: Lang; slug?: string; }
+const { lang, slug } = Astro.props;
+const t = UI[lang];
+const ar = lang === 'ar';
+const hub = NEWBUILD[lang];
+const s = slug ? newbuildBySlug(slug) : null;
+const c = s?.[lang];
+const path = s ? `${NEWBUILD_PATH}${s.slug}/` : NEWBUILD_PATH;
+const title = c ? c.title : hub.title;
+const desc = c ? c.desc : hub.desc;
+const trail: [string, string][] = [[t.home, '/'], [hub.h1, NEWBUILD_PATH], ...(c ? [[c.name, path] as [string, string]] : [])];
+const wa = c ? `${hub.cta}: ${c.name}` : hub.cta;
+const guide = GUIDES.find((g) => g.slug === 'new-plot-plumbing-stages')!;
+
+const serviceLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Service',
+  name: c ? c.name : hub.h1,
+  description: desc,
+  serviceType: c ? s!.en.name : 'Plumbing contracting for new builds',
+  provider: { '@id': SITE.url + '/#business' },
+  areaServed: { '@type': 'Country', name: 'Kuwait' },
+  url: SITE.url + href(lang, path),
+  ...(c ? {} : {
+    hasOfferCatalog: {
+      '@type': 'OfferCatalog', name: hub.h1,
+      itemListElement: NEWBUILD_SERVICES.map((x) => ({ '@type': 'Offer', itemOffered: { '@type': 'Service', name: x[lang].name, url: SITE.url + href(lang, `${NEWBUILD_PATH}${x.slug}/`) } })),
+    },
+  }),
+};
+---
+<Base lang={lang} path={path} title={title} desc={desc} jsonld={[serviceLd]}>
+  <div class="page-hero">
+    <div class="container">
+      <Blocks kind="crumbs" lang={lang} trail={trail} />
+      <div class="inner">
+        {s && <div class="icon-badge big"><Icon name={s.icon} /></div>}
+        <p class="kicker">{ar ? 'خبرة 30 سنة بالكويت' : '30 years in Kuwait'}</p>
+        <h1>{c ? c.name : hub.h1}</h1>
+        <p class="lead">{c ? c.intro : hub.intro}</p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href={waLink(wa)}><Icon name="whatsapp" />{hub.sendPlan}</a>
+          <a class="btn btn-outline" href={telLink()}><Icon name="phone" />{t.call}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {!c && (
+    <section class="section">
+      <div class="container">
+        <div class="sec-head"><h2>{ar ? 'شنو ننفّذ' : 'What we build'}</h2></div>
+        <Sections kind="services" lang={lang} items={NEWBUILD_SERVICES} base={NEWBUILD_PATH} />
+      </div>
+    </section>
+  )}
+
+  {c && (
+    <section class="section">
+      <div class="container grid grid-2">
+        <div class="card"><h2 class="h3">{ar ? 'شنو يشمل الشغل' : 'What is included'}</h2><ul class="checklist">{c.includes.map((i) => <li>{i}</li>)}</ul></div>
+        <div class="card"><h2 class="h3">{ar ? 'متى تحتاجنا؟' : 'When to call us'}</h2><ul class="checklist">{c.signs.map((i) => <li>{i}</li>)}</ul></div>
+      </div>
+    </section>
+  )}
+
+  <section class="section mist">
+    <div class="container">
+      <div class="sec-head"><h2>{ar ? 'ليش شركتنا؟' : 'Why us'}</h2></div>
+      <div class="grid grid-2">
+        {hub.promises.map((p) => (
+          <div class="principle">
+            <div class="icon-badge"><Icon name={p.icon} /></div>
+            <div><h3>{p.t}</h3><p class="muted">{p.d}</p></div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="sec-head"><h2>{ar ? 'من المخطط للتسليم' : 'From drawings to handover'}</h2>
+        <p>{ar ? 'التسعير حسب المخطط، وكل مرحلة تنفحص مع مهندسك قبل اللي بعدها.' : 'Priced from the drawings, and every stage is checked with your engineer before the next.'}</p></div>
+      <ol class="steps">{hub.steps.map((x, i) => <li><span class="n">{i + 1}</span><div><h3>{x.t}</h3><p>{x.d}</p></div></li>)}</ol>
+    </div>
+  </section>
+
+  {!c && (
+    <section class="section mist">
+      <div class="container split">
+        <div class="card"><h2 class="h3">{ar ? 'نشتغل على' : 'We work on'}</h2><ul class="checklist">{hub.who.map((i) => <li>{i}</li>)}</ul></div>
+        <div class="card stack">
+          <h2 class="h3">{ar ? 'دليلك قبل لا تبدأ' : 'Read before you start'}</h2>
+          <p class="muted">{guide[lang].desc}</p>
+          <a class="btn btn-outline" style="align-self:flex-start" href={href(lang, `/guides/${guide.slug}/`)}>{guide[lang].h1}</a>
+        </div>
+      </div>
+    </section>
+  )}
+
+  <section class="section" id="request">
+    <div class="container split">
+      <div class="stack">
+        <h2>{ar ? 'اطلب عرض سعر' : 'Request a quote'}</h2>
+        <p class="muted">{ar ? 'اكتب بياناتك، ويفتح لك الواتساب والرسالة جاهزة. طرّش ويّاها صورة المخطط.' : 'Fill in your details and WhatsApp opens with the message ready. Attach a photo of the drawings.'}</p>
+      </div>
+      <div class="card"><RequestForm lang={lang} service={s?.slug ?? NEWBUILD_SERVICES[0].slug} /></div>
+    </div>
+  </section>
+
+  <section class="section mist">
+    <div class="container narrow">
+      <h2 style="margin-bottom:20px">{ar ? 'أسئلة شائعة' : 'Questions'}</h2>
+      <Blocks kind="faq" lang={lang} items={c ? [...c.faq, ...hub.faq.slice(0, 2)] : hub.faq} />
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="sec-head"><h2>{ar ? 'نشتغل بكل مناطق الكويت' : 'Across every area of Kuwait'}</h2></div>
+      <ul class="chips">{AREAS.map((a) => <li><a href={href(lang, `/areas/${a.slug}/`)}>{a[lang].name}</a></li>)}</ul>
+      {c && <>
+        <div class="sec-head" style="margin-top:48px"><h2>{ar ? 'خدمات المقاولات الثانية' : 'Other contracting services'}</h2></div>
+        <Sections kind="services" lang={lang} items={NEWBUILD_SERVICES} base={NEWBUILD_PATH} exclude={s!.slug} />
+      </>}
+    </div>
+  </section>
+
+  <Sections kind="cta" lang={lang} />
+</Base>
+<style>
+  .icon-badge.big { width: 64px; height: 64px; border-radius: 18px; }
+  .icon-badge.big :global(svg) { width: 34px; height: 34px; }
+  .h3 { font-size: 1.25rem; }
+  .chips a { text-decoration: none; color: var(--cedar); }
+</style>

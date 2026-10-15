@@ -3,6 +3,7 @@
 import Icon from './Icon.astro';
 import { SITE } from '../config';
 import { SERVICES } from '../data/services';
+import { NEWBUILD_SERVICES, NEWBUILD } from '../data/newbuild';
 import { AREAS } from '../data/areas';
 import type { Lang } from '../i18n';
 interface Props { lang: Lang; service?: string; }
@@ -22,6 +23,7 @@ const L = ar
       <label for="rf-service">{L.service}</label>
       <select id="rf-service" name="service">
         {SERVICES.map((s) => <option value={s[lang].name} selected={s.slug === service}>{s[lang].name}</option>)}
+        <optgroup label={NEWBUILD[lang].h1}>{NEWBUILD_SERVICES.map((s) => <option value={s[lang].name} selected={s.slug === service}>{s[lang].name}</option>)}</optgroup>
         <option value={ar ? 'عقد صيانة للشركات' : 'Business maintenance contract'}>{ar ? 'عقد صيانة للشركات' : 'Business maintenance contract'}</option>
         <option value={L.other}>{L.other}</option>
       </select>

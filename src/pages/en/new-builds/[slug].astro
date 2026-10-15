@@ -1,0 +1,7 @@
+---
+import NewBuild from '../../../views/NewBuild.astro';
+import { NEWBUILD_SERVICES } from '../../../data/newbuild';
+export const getStaticPaths = () => NEWBUILD_SERVICES.map((s) => ({ params: { slug: s.slug } }));
+const { slug } = Astro.params;
+---
+<NewBuild lang="en" slug={slug!} />

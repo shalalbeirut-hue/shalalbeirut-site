@@ -3,6 +3,7 @@ import Mark from './Mark.astro';
 import Icon from './Icon.astro';
 import { SITE } from '../config';
 import { SERVICES } from '../data/services';
+import { NEWBUILD } from '../data/newbuild';
 import { AREAS } from '../data/areas';
 import { type Lang, href, UI, waLink, telLink, displayPhone } from '../i18n';
 interface Props { lang: Lang; }
@@ -31,7 +32,7 @@ const year = new Date().getFullYear();
     </div>
     <div>
       <h2 class="f-h">{t.nav.services}</h2>
-      <ul class="f-list">{SERVICES.map((s) => <li><a href={href(lang, `/services/${s.slug}/`)}>{s[lang].name}</a></li>)}</ul>
+      <ul class="f-list">{SERVICES.map((s) => <li><a href={href(lang, `/services/${s.slug}/`)}>{s[lang].name}</a></li>)}<li><a href={href(lang, '/new-builds/')}>{NEWBUILD[lang].h1}</a></li><li><a href={href(lang, '/guides/')}>{lang === 'ar' ? 'دليل' : 'Guides'}</a></li></ul>
     </div>
     <div>
       <h2 class="f-h">{t.nav.areas}</h2>

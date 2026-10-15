@@ -1,32 +1,33 @@
 ---
 // Small shared blocks, picked by `kind` so pages stay short.
 import Icon from './Icon.astro';
-import { SERVICES } from '../data/services';
+import { SERVICES, type Service } from '../data/services';
 import { AREAS } from '../data/areas';
 import { PRINCIPLES, STEPS } from '../data/content';
 import { type Lang, href, UI, waLink } from '../i18n';
-interface Props { kind: 'services' | 'principles' | 'steps' | 'areas' | 'cta'; lang: Lang; exclude?: string; }
-const { kind, lang, exclude } = Astro.props;
+// `items` and `base` let other service families (e.g. new-build contracting) reuse the service cards.
+interface Props { kind: 'services' | 'principles' | 'steps' | 'areas' | 'cta'; lang: Lang; exclude?: string; items?: Service[]; base?: string; }
+const { kind, lang, exclude, items = SERVICES, base = '/services/' } = Astro.props;
 const t = UI[lang];
 const ar = lang === 'ar';
 ---
 {kind === 'services' && (
   <div class="svc-grid">
-    {SERVICES.filter((s) => s.slug !== exclude).map((s) => {
+    {items.filter((s) => s.slug !== exclude).map((s) => {
       const from = s.prices.map((p) => p.from).filter((v): v is number => v != null && v > 0);
       const min = from.length ? Math.min(...from) : null;
       return (
         <article class="svc">
           <div class="svc-top">
             <span class="svc-icon"><Icon name={s.icon} /></span>
-            <span class="svc-price">{min != null ? <>{t.fromPrice} <b>{min} {t.kd}</b></> : (ar ? 'السعر بعد المعاينة' : 'Priced after inspection')}</span>
+            <span class="svc-price">{min != null ? <>{t.fromPrice} <b>{min} {t.kd}</b></> : (s.prices[0]?.from === null && s.prices.length === 1 ? s.prices[0][lang] : ar ? 'السعر بعد المعاينة' : 'Priced after inspection')}</span>
           </div>
-          <h3><a class="svc-title" href={href(lang, `/services/${s.slug}/`)}>{s[lang].name}</a></h3>
+          <h3><a class="svc-title" href={href(lang, `${base}${s.slug}/`)}>{s[lang].name}</a></h3>
           <p class="svc-desc">{s[lang].short}</p>
           <ul class="svc-tags">{s[lang].includes.slice(0, 3).map((i) => <li>{i}</li>)}</ul>
           <div class="svc-foot">
             <a class="svc-btn svc-btn-wa" href={waLink(`${t.waHello}: ${s[lang].name}`)}><Icon name="whatsapp" />{ar ? 'اطلبها الحين' : 'Request'}</a>
-            <a class="svc-btn svc-btn-more" href={href(lang, `/services/${s.slug}/`)} aria-label={`${t.learnMore}: ${s[lang].name}`}>{t.learnMore}<Icon name="arrow" class="dir-arrow" /></a>
+            <a class="svc-btn svc-btn-more" href={href(lang, `${base}${s.slug}/`)} aria-label={`${t.learnMore}: ${s[lang].name}`}>{t.learnMore}<Icon name="arrow" class="dir-arrow" /></a>
           </div>
         </article>
       );

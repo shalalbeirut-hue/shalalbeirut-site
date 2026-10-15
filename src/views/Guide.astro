@@ -1,0 +1,72 @@
+---
+// A guide article (with slug) or the list of guides (without).
+import Base from '../layouts/Base.astro';
+import Icon from '../components/Icon.astro';
+import Blocks from '../components/Blocks.astro';
+import Sections from '../components/Sections.astro';
+import { SITE } from '../config';
+import { GUIDES, guideBySlug } from '../data/guides';
+import { type Lang, href, UI, waLink } from '../i18n';
+interface Props { lang: Lang; slug?: string; }
+const { lang, slug } = Astro.props;
+const t = UI[lang];
+const ar = lang === 'ar';
+const label = ar ? 'دليل' : 'Guides';
+const g = slug ? guideBySlug(slug) : null;
+const c = g?.[lang];
+const path = g ? `/guides/${g.slug}/` : '/guides/';
+const title = c ? c.title : ar ? 'دليل الصحي والسباكة | شلال بيروت' : 'Plumbing Guides | Shalal Beirut';
+const desc = c ? c.desc : ar ? 'مقالات مختصرة عن التمديدات الصحية والصيانة بالكويت من فريق شلال بيروت.' : 'Short articles on plumbing and maintenance in Kuwait from the Shalal Beirut team.';
+const trail: [string, string][] = [[t.home, '/'], [label, '/guides/'], ...(c ? [[c.h1, path] as [string, string]] : [])];
+const articleLd = c ? [{
+  '@context': 'https://schema.org', '@type': 'Article', headline: c.h1, description: c.desc,
+  datePublished: g!.date, dateModified: g!.date, inLanguage: ar ? 'ar-KW' : 'en-KW',
+  author: { '@id': SITE.url + '/#business' }, publisher: { '@id': SITE.url + '/#business' },
+  image: SITE.url + (ar ? '/og-ar.png' : '/og-en.png'), mainEntityOfPage: SITE.url + href(lang, path),
+}] : [];
+---
+<Base lang={lang} path={path} title={title} desc={desc} jsonld={articleLd}>
+  <div class="page-hero">
+    <div class="container">
+      <Blocks kind="crumbs" lang={lang} trail={trail} />
+      <div class="inner">
+        <h1>{c ? c.h1 : label}</h1>
+        <p class="lead">{c ? c.lead : desc}</p>
+      </div>
+    </div>
+  </div>
+
+  {c ? (
+    <section class="section">
+      <article class="container prose">
+        {c.sections.map((sec) => <>
+          <h2>{sec.h}</h2>
+          {sec.p?.map((p) => <p>{p}</p>)}
+          {sec.list && <ul class="checklist">{sec.list.map((i) => <li>{i}</li>)}</ul>}
+        </>)}
+        <div class="btn-row" style="margin-top:12px">
+          <a class="btn btn-primary" href={waLink(ar ? 'السلام عليكم، قريت الدليل وأبي عرض سعر' : 'Hello, I read your guide and would like a quote')}><Icon name="whatsapp" />{ar ? 'طرّش المخطط على الواتساب' : 'Send the drawings on WhatsApp'}</a>
+          <a class="btn btn-outline" href={href(lang, g!.service)}>{t.learnMore}</a>
+        </div>
+      </article>
+    </section>
+  ) : (
+    <section class="section">
+      <div class="container grid grid-2">
+        {GUIDES.map((x) => (
+          <a class="card stack guide-card" href={href(lang, `/guides/${x.slug}/`)}>
+            <h2 class="h3">{x[lang].h1}</h2>
+            <p class="muted">{x[lang].desc}</p>
+          </a>
+        ))}
+      </div>
+    </section>
+  )}
+
+  <Sections kind="cta" lang={lang} />
+</Base>
+<style>
+  .h3 { font-size: 1.25rem; }
+  .guide-card { text-decoration: none; color: inherit; }
+  .guide-card:hover h2 { color: var(--cedar); }
+</style>

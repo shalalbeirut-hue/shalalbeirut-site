@@ -15,8 +15,8 @@ export const SITE = {
 
   shopAr: 'محلنا: دوار الكرد',
   shopEn: 'Our shop: Al-Kurd Roundabout',
-  mapsUrl: '',
-  geo: null as { lat: number; lng: number } | null,
+  mapsUrl: 'https://maps.app.goo.gl/jQJn7FTaPYQSge4f9',
+  geo: { lat: 29.3387728, lng: 48.0151674 } as { lat: number; lng: number } | null,
 
   social: {
     instagram: '', // e.g. 'https://instagram.com/shalalbeirut'

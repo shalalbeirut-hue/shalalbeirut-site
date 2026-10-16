@@ -148,7 +148,9 @@ table.prices th.num { text-align: end; }
 .stars { color: var(--sand); letter-spacing: 2px; font-family: var(--f-latin); }
 
 .split { display: grid; gap: clamp(24px, 5vw, 56px); grid-template-columns: 0.9fr 1.1fr; align-items: start; }
-@media (max-width: 900px) { .split { grid-template-columns: 1fr; } }
+@media (max-width: 900px) { .split { grid-template-columns: minmax(0, 1fr); } }
+.split > *, .grid > * { min-width: 0; }
+.form .row > *, .field input, .field select, .field textarea { min-width: 0; max-width: 100%; }
 .narrow { max-width: 860px; }
 .prose { display: flex; flex-direction: column; gap: 14px; max-width: 70ch; }
 .prose h2 { margin-top: 14px; font-size: 1.5rem; }

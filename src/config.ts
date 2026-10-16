@@ -19,7 +19,7 @@ export const SITE = {
   geo: { lat: 29.3387728, lng: 48.0151674 } as { lat: number; lng: number } | null,
 
   social: {
-    instagram: '', // e.g. 'https://instagram.com/shalalbeirut'
+    instagram: 'https://www.instagram.com/shalalbeirut/',
     tiktok: '',
     snapchat: '',
   },

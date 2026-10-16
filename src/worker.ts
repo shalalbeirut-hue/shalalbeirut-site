@@ -78,7 +78,14 @@ export default {
       }
     }
 
-    if (url.hostname === CANONICAL_HOST) return res;
+    if (url.hostname === CANONICAL_HOST) {
+      const secured = new Response(res.body, res);
+      secured.headers.set('Strict-Transport-Security', 'max-age=31536000');
+      secured.headers.set('X-Content-Type-Options', 'nosniff');
+      secured.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+      if (url.pathname.startsWith('/_astro/')) secured.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+      return secured;
+    }
     // Any other host (workers.dev previews, local dev) must never be indexed.
     const out = new Response(res.body, res);
     out.headers.set('X-Robots-Tag', 'noindex, nofollow');

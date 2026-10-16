@@ -18,6 +18,12 @@ const MOVED: Record<string, string> = {
   '/services/pumps': '/services/tanks-pumps/',
 };
 
+// Services paused for now: temporary redirect (302) so Google keeps the page for when it returns.
+const PAUSED: Record<string, string> = {
+  '/services/leak-detection': '/services/',
+  '/en/services/leak-detection': '/en/services/',
+};
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
@@ -32,6 +38,8 @@ export default {
 
     const moved = MOVED[url.pathname.replace(/\/$/, '')];
     if (moved) return Response.redirect(new URL(moved, url).toString(), 301);
+    const paused = PAUSED[url.pathname.replace(//$/, '')];
+    if (paused) return Response.redirect(new URL(paused, url).toString(), 302);
 
     if (url.hostname === 'www.' + CANONICAL_HOST) {
       url.hostname = CANONICAL_HOST;

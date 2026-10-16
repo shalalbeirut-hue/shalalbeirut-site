@@ -11,11 +11,13 @@ type Copy = {
   signs: string[];
   faq: { q: string; a: string }[];
 };
-export type Service = { slug: string; icon: string; ar: Copy; en: Copy; prices: PriceItem[] };
+// hidden: taken off the website for now (page redirects, not listed, no search phrases). Set back to false to restore.
+export type Service = { slug: string; icon: string; ar: Copy; en: Copy; prices: PriceItem[]; hidden?: boolean };
 
-export const SERVICES: Service[] = [
+export const ALL_SERVICES: Service[] = [
   {
     slug: 'leak-detection',
+    hidden: true, // owner 2026-10-17: leak detection paused for now
     icon: 'drop',
     ar: {
       name: 'كشف تسربات المياه',
@@ -259,4 +261,7 @@ export const SERVICES: Service[] = [
   },
 ];
 
+/** Services shown on the website. */
+export const SERVICES: Service[] = ALL_SERVICES.filter((s) => !s.hidden);
+export const HIDDEN_SLUGS = ALL_SERVICES.filter((s) => s.hidden).map((s) => s.slug);
 export const serviceBySlug = (slug: string) => SERVICES.find((s) => s.slug === slug)!;

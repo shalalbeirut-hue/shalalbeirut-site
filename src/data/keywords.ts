@@ -2,6 +2,7 @@
 // (Google only counts text that people can see) and listed in the keywords meta and JSON-LD.
 // Spelling variants (ة/ه، ي/ى) are on purpose: people search both ways.
 import type { Lang } from '../i18n';
+import { HIDDEN_SLUGS } from './services';
 import { AREAS } from './areas';
 
 type Kw = { t: string; to: string };
@@ -66,7 +67,7 @@ const AR: Group[] = [
     title: 'ضمان وأسعار',
     items: [
       ...g('/warranty/', ['فني صحي بالضمان', 'صيانة مع ضمان', 'ضمان مكتوب']),
-      ...g('/prices/', ['اسعار فني صحي', 'اسعار السباكة', 'اسعار تسليك المجاري', 'اسعار كشف التسربات', 'كشف مجاني']),
+      ...g('/prices/', ['اسعار فني صحي', 'اسعار السباكة', 'اسعار تسليك المجاري', 'كشف مجاني']),
     ],
   },
 ];
@@ -137,7 +138,11 @@ const areaGroups = (lang: Lang): Group[] =>
     items: g(`/areas/${a.slug}/`, a[lang].places.map((p) => (lang === 'ar' ? `فني صحي ${p}` : `Plumber ${p}`))),
   }));
 
-export const KEYWORD_GROUPS: Record<Lang, Group[]> = { ar: AR, en: EN };
+// Phrases that link to a hidden service are left out until it is back; groups that end up empty are dropped.
+const visible = (groups: Group[]) => groups
+  .map((grp) => ({ ...grp, items: grp.items.filter((k) => !HIDDEN_SLUGS.some((h) => k.to === `/services/${h}/`)) }))
+  .filter((grp) => grp.items.length);
+export const KEYWORD_GROUPS: Record<Lang, Group[]> = { ar: visible(AR), en: visible(EN) };
 export const AREA_KEYWORDS = areaGroups;
 
 /** Core phrases in both languages (no per-place ones), for the keywords meta and the business JSON-LD. */

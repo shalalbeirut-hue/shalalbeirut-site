@@ -61,7 +61,7 @@ export const CONTRACTS = {
     desc: 'عقود صيانة صحية سنوية للعمارات والمكاتب والمجمعات والمساجد في الكويت: زيارات دورية للخزانات والمضخات والسخانات، وخدمة طوارئ، وتقارير بعد كل زيارة.',
     h1: 'عقود صيانة سنوية للشركات والعمارات',
     intro: 'عندك عمارة أو مجمع أو مكاتب؟ بدال لا تنطر العطل، نجيك بزيارات دورية ونلحق على المشكلة قبل لا تصير. تقرير بعد كل زيارة، ورقم طوارئ خاص لك.',
-    items: ['تنظيف وتعقيم الخزانات كل 6 شهور', 'فحص المضخات والعوامات', 'صيانة السخانات المركزية', 'كشف دوري للتسريبات', 'أولوية في الطوارئ', 'تقرير مكتوب بعد كل زيارة'],
+    items: ['تنظيف وتعقيم الخزانات كل 6 شهور', 'فحص المضخات والعوامات', 'صيانة السخانات المركزية', 'فحص دوري للتمديدات', 'أولوية في الطوارئ', 'تقرير مكتوب بعد كل زيارة'],
     who: ['العمارات السكنية', 'المكاتب والأبراج', 'المجمعات التجارية', 'المساجد', 'المطاعم والفنادق', 'المدارس والحضانات'],
   },
   en: {
@@ -69,7 +69,7 @@ export const CONTRACTS = {
     desc: 'Annual plumbing maintenance contracts for buildings, offices, complexes and mosques in Kuwait: scheduled tank, pump and heater visits, emergency call-outs and a report after every visit.',
     h1: 'Annual maintenance contracts for companies and buildings',
     intro: 'Managing a building, a complex or offices? Instead of waiting for a breakdown, we visit on a schedule and catch problems early. You get a report after each visit and a dedicated emergency number.',
-    items: ['Tank cleaning and disinfection every 6 months', 'Pump and float valve checks', 'Central water heater servicing', 'Routine leak checks', 'Priority emergency response', 'Written report after every visit'],
+    items: ['Tank cleaning and disinfection every 6 months', 'Pump and float valve checks', 'Central water heater servicing', 'Routine pipework checks', 'Priority emergency response', 'Written report after every visit'],
     who: ['Residential buildings', 'Offices and towers', 'Shopping complexes', 'Mosques', 'Restaurants and hotels', 'Schools and nurseries'],
   },
 };

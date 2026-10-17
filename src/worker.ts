@@ -38,7 +38,7 @@ export default {
 
     const moved = MOVED[url.pathname.replace(/\/$/, '')];
     if (moved) return Response.redirect(new URL(moved, url).toString(), 301);
-    const paused = PAUSED[url.pathname.replace(//$/, '')];
+    const paused = PAUSED[url.pathname.replace(/\/$/, '')];
     if (paused) return Response.redirect(new URL(paused, url).toString(), 302);
 
     if (url.hostname === 'www.' + CANONICAL_HOST) {
